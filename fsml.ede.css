@@ -1,0 +1,69 @@
+
+/* (c) 2021 Alexandr Stadnichenko */
+
+
+* { 
+    margin:         0px;
+    padding:        0px;
+    border-width:   0px; }
+
+
+body {
+    background-color: red; }
+
+
+#topwrapper {
+    position:   fixed;
+    background-color: gray; }
+
+
+#leftpane {
+    position:   fixed;
+    overflow:   auto;
+ 
+    padding: 8px;
+
+    background-color: black;
+    color:  lightgreen; }
+
+
+#centerpane {
+    position:   fixed;
+    width: 16px; }
+
+
+#rightpane {
+    position:   fixed;
+
+    border-style:   dotted;
+    border-width:   1px;
+    border-color:   blue;
+
+    padding: 8px;
+
+    text-align: center;
+    background-color: snow; }
+
+#fsmlogo {
+    text-align: center;
+    font-size:  14px; }
+
+#fsmlog {
+    font-size:  14px;
+}
+
+#inbox {
+    width: 100%;
+    padding-bottom: 14px;
+
+    border-style:   hidden;
+    border-width:   0px;
+
+    font-size:  14px;
+
+    color:  lightgreen;
+    background-color: black; }
+
+
+
+
