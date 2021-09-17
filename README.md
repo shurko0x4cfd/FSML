@@ -1,5 +1,5 @@
 # FSML
-Kawaii homoiconic postfix concatenative programming language
+Kawaii homoiconic postfix concatenative programming language.
 
 FSML is Forth/Factor-like programming language and transpiller for. Language mainly procedural with wide functional style support. Intended mainly to static compilation to othes high-level languages. First to Python 3, OSL and JavaScript, then to Java and any one language which can produce native code - may be llvm or suitable C-like. Then I hope add interpretation abilities for dialog work. In conclusion may be add jit-compiler for amd64 instruction set but not sure.
 
@@ -15,9 +15,12 @@ Features:
 
 * Stacks and quotation is the exactly same. At time '\[' occur, current stacks id keep in stacks chain, new empty stack allocated and established as current. At time '\]' occur, id of current (nested) quotation/stack placed on top of embrace (previous) stack and previous stack established as current again. For example text '12 34 \[ 56 78 \]' leave Quot -> 34 -> 12, where Quot is pointer to stack/quotation which contain elements 78 -> 56.
 
-* Operations on empty stack allowed! It produce expressions like lambda with bounded variables. Enclose it in brackets produce quotation. Text '1 2 \[ \[ + \] apply \] apply' also work as well as '1 2 \[ + \] apply'.
+* Operations on empty stack allowed! It produce expressions with variables. Enclose it in brackets produce quotation. Text '1 2 \[ \[ + \] apply \] apply' also work as well as '1 2 \[ + \] apply'.
 
 * Objects duplicated with combinators accessible by reference not by value! Need 'ind' to detach stack item and some time 'dc' to deep copy of object which stack item refer to. Apply quotation on current stack convert this quotation and current stack to bunch of expressions of current stack which is quotation per se. It is not obligate expressions with variables. Although if arguments of quotation contain variables itself or just not enough arguments for quotation in current stack then 'apply' produce expressions with variables. Need use 'dc' on copy of quotation for keep original quotation for use late. Otherwise any 'apply' occured transform it in itself distinctive manner.
+
+Command line starts with '>'. Click LMB on command line to focus input.
+Almost no error handling yet. On error system usually crush and require reload of page. Open browsers console to track it.
 
 
 Example of computing factorial of 12 with 'if' and 'while' :
