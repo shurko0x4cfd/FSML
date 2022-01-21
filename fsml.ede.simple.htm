@@ -2,7 +2,7 @@
 <html lang=en>
     <head>
         <meta charset="utf-8" />
-        <link rel="stylesheet" href="fsml.ede.css" type="text/css" title="some-stile" />
+        <link rel="stylesheet" href="fsml.ede.simple.css" type="text/css" title="some-stile" />
         <title>FSML elementary development environment</title>
     </head>
 <body>
@@ -16,25 +16,23 @@
     <br>                           FSML                           
     <br>==========================================================
     <br>
-    <br> FSML 0.2.47, (c) 2021 Alexander (Shurko) Stadnichenko
+    <br> FSML 0.3.0, (c) 2021, 2022 Alexander (Shurko) Stadnichenko
     <br> Type 'help' to FSML help you,
     <br> 'license' to view BSD license, 'bb' to farewell
     <br> &nbsp;
 </div>
 
 <div id="fsmlog"></div>
-    <form id="inputform">
-        <input name="inbox" id="inbox" placeholder=">">
-    </form>
-</div>
 
-<div id="centerpane"></div>
-<div id="rightpane"> Wellcome! </div>
+<form id="inputform">
+     <input name="inbox" id="inbox" placeholder=">">
+</form>
+
+</div>
 
 </div> <!-- top wrapper -->
 
-<script src="fsml.js"></script>
-<script src="fsml.ede.js"></script>
+<script type='module' src="fsml.ede.simple.js"></script>
 </body>
 </html>
 

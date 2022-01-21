@@ -1,14 +1,14 @@
 
-/* FSML 0.2 */
+/* FSML 0.3 */
 
 /* FSML programming language compiler */
 /* Copyright (c) 2021 Alexander (Shurko) Stadnichenko */
 /* License : BSD */
-/* Ver : 0.2.47 */
-/* Upd : 21.07.30 */
+/* Ver : 0.3.0 */
+/* Upd : 21.01.21 */
 
 
-// TODO SVN, Git, Refactor, unordereds, proper ordering, debug, refine, return
+// TODO Refactor, unordereds, proper ordering, debug, refine, return
 //      statement,
 //      push/pop, access by index, escape/unescape, hash, native injection,
 //      auto expressions reduce == constant precomputing, refine stack output,
@@ -35,15 +35,16 @@
 
 // fsmin, dram, i - independent or individual
 
-cl = console .log; // Aforethought global!
-var fsml = {}; // Try occupy global
+const cl = console .log;
+let fsml = {};
 
+// if default 'fsmlog_type' not overriden, accumulate fsml output for return to environmen at end of compilation
+let output_buffer = '';
 
-;(function (){
+const default_fsmlog_type = (text) => { output_buffer += text; }
 
-
-var BSD_license = 
-"<br>Copyright (c) 2021 Alexandr (Shurko) Stadnichenko <br>All rights reserved. <br> <br>Redistribution and use in source and binary forms, with or without <br>modification, are permitted provided that the following conditions are met: <br> <br>1. Redistributions of source code must retain the above copyright notice, this <br>   list of conditions and the following disclaimer. <br>2. Redistributions in binary form must reproduce the above copyright notice, <br>   this list of conditions and the following disclaimer in the documentation <br>   and/or other materials provided with the distribution. <br> <br>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND <br>ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED <br>WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE <br>DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR <br>ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES <br>(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; <br>LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND <br>ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT <br>(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS <br>SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.";
+let BSD_license = 
+"<br>Copyright (c) 2021 Alexander (Shurko) Stadnichenko <br>All rights reserved. <br> <br>Redistribution and use in source and binary forms, with or without <br>modification, are permitted provided that the following conditions are met: <br> <br>1. Redistributions of source code must retain the above copyright notice, this <br>   list of conditions and the following disclaimer. <br>2. Redistributions in binary form must reproduce the above copyright notice, <br>   this list of conditions and the following disclaimer in the documentation <br>   and/or other materials provided with the distribution. <br> <br>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND <br>ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED <br>WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE <br>DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR <br>ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES <br>(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; <br>LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND <br>ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT <br>(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS <br>SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.";
 
 
 var fsml_systate =
@@ -69,14 +70,14 @@ var new_str_uid =
             return prefix +"_" +uids [prefix]++; }})();
 
 
-current_stack = new Abstract_stack (); // Aforethought global
+let current_stack = new Abstract_stack (); // Aforethought global
 
 
 fsml = {
     environment: {
-        fsmlog_type: undefined,
+        fsmlog_type: default_fsmlog_type,
         fsml_type_stack: type_stack,
-        fsml_eval:   fsml_eval }};
+        fsml_eval }};
 
 
 var fsmlog_type = function (fsml_out)
@@ -261,7 +262,11 @@ as_proto .type_stack = function ()
       { self ._need_id_substitution = item .compex;
         fsml_out += item_separator +compex_to_infix_str (item .compex);
         item_separator = " -> ";});
-    fsmlog_type (fsml_out); }
+    fsmlog_type (fsml_out);
+    if (output_buffer)
+      { const buffer_output = output_buffer;
+        output_buffer = '';
+        return buffer_output; } }
 
 
 as_proto .translate_to_js = function ()
@@ -314,7 +319,7 @@ as_proto .translate_to_js = function ()
             if (syn_item && (syn_item === translated_expression))
               { syn = ""; } } // "/* Tautology '" +syn_item +" = " +syn_item +"' excluded */"; } }
 
-        target_str_uid = compex .get_target_str_uid ();
+        let target_str_uid = compex .get_target_str_uid ();
 
         if (compex .operator .check_flag ("no_equation") || compex .check_flag ("no_equation"))
           { self .target_text += "<br>" +translated_expression; }
@@ -492,11 +497,16 @@ function synonymous (compex)
 function fsml_eval (fsml_in)
   { fsml_in = alt_split (fsml_in);
     for (var i in fsml_in)
-      { compile_term (fsml_in [i][0], fsml_in [i][1]); }; }
+      { compile_term (fsml_in [i][0], fsml_in [i][1]); };
+    if (output_buffer !== '')
+      { let buffer_output = output_buffer;
+        output_buffer = '';
+        return buffer_output; }
+    else return undefined; }
 
 
 function type_stack ()
-  { current_stack .type_stack (); }
+  { return current_stack .type_stack (); }
 
 
 function alt_split (s)  // <-- Draft
@@ -1480,6 +1490,5 @@ function time_semantics ()
     current_stack .set_flag ("no-pure-presented"); }
 
 
-})();
-
+export {fsml};
 
