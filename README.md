@@ -19,6 +19,7 @@ Features:
 
 * Objects duplicated with combinators accessible by reference not by value! Need 'ind' to detach stack item and some time 'dc' to deep copy of object which stack item refer to. Apply quotation on current stack convert this quotation and current stack to bunch of expressions of current stack which is quotation per se. It is not obligate expressions with variables. Although if arguments of quotation contain variables itself or just not enough arguments for quotation in current stack then 'apply' produce expressions with variables. Need use 'dc' on copy of quotation for keep original quotation for use late. Otherwise any 'apply' occured transform it in itself distinctive manner.
 
+Run from under the local server, otherwise there will be a "CORS request not HTTP" error.
 Command line starts with '>'. Click LMB on command line to focus input.
 Almost no error handling yet. On error system usually crush and require reload of page. Open browsers console to track it.
 
@@ -35,9 +36,9 @@ Example of string concatenation in loop :
 
 ```factor
 "" comma !
-2 "" [ comma @ + ' somename_' + over + '_alias = somename_' + over + dup s ! ', ' comma ! over 1 - ] while swap dp
+2 "" [ comma @ + ' somename_' + over + '_alias = somename_' + over + ', ' comma ! over 1 - ] while swap dp
 'var ' swap + ';' +
-.eval
+.eval dp
 
 [var somename_2_alias = somename_2, somename_1_alias = somename_1;]
 ```
