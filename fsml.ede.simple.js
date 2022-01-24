@@ -5,7 +5,7 @@
 /* (c) 2021, 2022 Alexander Stadnichenko */
 /* License : BSD */
 /* Ver : 0.3.0 */
-/* Upd : 22.01.21 */
+/* Upd : 22.01.23 */
 
 
 import { fsml } from './fsml.js';
@@ -39,8 +39,10 @@ function handle_submit (e)
     
     const fsml_eval_result = fsml_eval (fsml_in);
     if (fsml_eval_result) fsmlog_type (fsml_eval_result);
+
     const r = fsml .environment .fsml_type_stack ();
     if (r) fsmlog_type (r);
+
     lp .scrollBy (0, 1000); }
 
 window .addEventListener ("contextmenu", e => { e .preventDefault(); }, false);
