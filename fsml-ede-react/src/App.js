@@ -5,23 +5,29 @@ import * as React from 'react';
 import { fsml } from './fsml.js';
 
 
+
+
 class FSMLConsole extends React .Component {
 
     constructor (props)
       { super (props);
         this .state = {};
-        this .state .share = {};
-        this .state .share .text = ''; }
+        this .state .text = '';
+        this .send_news = this .send_news .bind (this); }
+
+    send_news (news)
+      { const text = this .state .text + news;
+        this .setState ({text: text}); }
 
     render ()
       { return (
           <div id='leftpane'>
               <Fsmlogo />
-              <Fsmlog share = { this .state .share } />
-              <Inbox  share = { this .state .share } />
+              <Fsmlog text = { this .state .text } />
+              <Inbox  send_news = { this .send_news } />
           </div> );}
 
-} // AFSMLConsole
+} // FSMLConsole
 
 
 class Fsmlogo extends React .Component {
@@ -40,7 +46,7 @@ class Fsmlogo extends React .Component {
 
     render ()
       { return (
-            <div id = 'fsmlogo' className = "pre-line" children = { this.state.text }/> );}
+            <div id = 'fsmlogo' className = "pre-line" children = { this .state .text }/> );}
 
 } // Fsmlogo
 
@@ -48,19 +54,11 @@ class Fsmlogo extends React .Component {
 class Fsmlog extends React .Component {
 
     constructor (props)
-      { super (props);
-        this .state = {};
-        this .state .text = '';
-        this .text = '';
-        props .share .upd = this .upd .bind (this); }
-
-    upd (a)
-      { this .text += a;
-        this .setState ({text: this .text});}
+      { super (props); }
 
     render ()
       { return (
-          <div id = 'fsmlog' className = "pre-line" children = { this .state .text } />); }
+          <div id = 'fsmlog' className = "pre-line" children = { this .props .text } />); }
 
 } // Fsmlog
 
@@ -69,34 +67,42 @@ class Inbox extends React .Component {
 
     constructor (props)
       { super (props);
-        this .share = props .share;
         this .state = {};
         this .state .text = '';
         this .fsml_eval = fsml .environment .fsml_eval;
         this .get_stack = fsml .environment .fsml_type_stack;
         this .enter_handler = this .enter_handler .bind (this);
         this .change_handler = this .change_handler .bind (this);
+
+        // fsml .environment .fsmlog_type = this .props .send_news;
+
+        // If autofocus fail
         setTimeout (() => { document .getElementById ('inbox') .focus (); }, 1000); }
 
     enter_handler (e)
       { e .preventDefault ();
-
-        let upd = this .share .upd;
+        
+        let send_news = this .props .send_news;
 
         let logtext = this .state .text + '\n';
+        
+        let eval_result = this .fsml_eval (this .state .text);
+
+        if (eval_result)
+          { logtext += '\n' + eval_result + '\n'; }
+        
+        let stack = this .get_stack ();
+
+        if (stack)
+          { logtext += stack + '\n' + '\n'; }
+
         this .setState ({text: ''});
 
-        this .eval_result = this .fsml_eval (this .state .text);
-        
-        if (this .eval_result)
-          { logtext += '\n' + this .eval_result + '\n'; }
+        send_news (logtext);
 
-        this .r = this .get_stack ();
+        // console .log (logtext);
 
-        if (this .r)
-          { logtext += this .r + '\n' + '\n'; }
-
-        upd (logtext);
+        // Show prompt
         setTimeout (() => { document .getElementById ('leftpane') .scrollBy (0, 1000); }, 200); }
 
     change_handler (e)
@@ -120,4 +126,3 @@ class Inbox extends React .Component {
 
 
 export { FSMLConsole };
-
