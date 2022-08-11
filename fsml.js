@@ -15,9 +15,6 @@
 //      comments, stack type switcher, stack type style switcher,
 //      automatic testing, Q1 Q2 *, two text style,
 //      Mode of everlasting ], <switcher/trigger> alternates?,
-
-//      russian translate
-
 //      sequences, referencing, load/import/include,
 //      arbitrary environment functions, loops,
 //      true recursion, exceptions,
@@ -354,7 +351,7 @@ function translate_empty_quotation (indent_size, item_names, another_item_names)
   { var target_text = "";
     var var_declarations = "";
     var assign_statement = "";
-    var comma = equation = "";
+    let comma = "", equation = "";
 
     var indent_string = "&nbsp;" .repeat (indent_size);
     
@@ -499,7 +496,7 @@ function fsml_eval (fsml_in)
     for (var i in fsml_in)
       { compile_term (fsml_in [i][0], fsml_in [i][1]); };
     if (output_buffer !== '')
-      { let buffer_output = output_buffer;
+      { const buffer_output = output_buffer;
         output_buffer = '';
         return buffer_output; }
     else return undefined; }
@@ -928,7 +925,7 @@ function _substitute_variables (compex, p, n)
             fsmlog_type (s); */ }
 
         if (!placeholder .comparative_computing_order && substitutional .comparative_computing_order)
-          { s = "Warning: ! placeholder .comparative_computing_order &&  substitutional .comparative_computing_order";
+          { let s = "Warning: ! placeholder .comparative_computing_order &&  substitutional .comparative_computing_order";
             fsmlog_type (s); }
 
         p .operand [n] .reference_no_subex (); /*_no_subex ();*/ // ! Palliative. Fix it

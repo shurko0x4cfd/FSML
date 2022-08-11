@@ -15,9 +15,6 @@
 //      comments, stack type switcher, stack type style switcher,
 //      automatic testing, Q1 Q2 *, two text style,
 //      Mode of everlasting ], <switcher/trigger> alternates?,
-
-//      russian translate
-
 //      sequences, referencing, load/import/include,
 //      arbitrary environment functions, loops,
 //      true recursion, exceptions,
@@ -499,7 +496,7 @@ function fsml_eval (fsml_in)
     for (var i in fsml_in)
       { compile_term (fsml_in [i][0], fsml_in [i][1]); };
     if (output_buffer !== '')
-      { let buffer_output = output_buffer;
+      { const buffer_output = output_buffer;
         output_buffer = '';
         return buffer_output; }
     else return undefined; }

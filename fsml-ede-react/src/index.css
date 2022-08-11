@@ -1,69 +1,79 @@
+/* (c) 2021, 2022 Alexander (Shurko) Stadnichenko */
 
-* 
-{ margin:         0px;
-  padding:        0px;
-  border-width:   0px; }
 
-html, body
-  { width: 100%;
-    height: 100%;
-    background-color: red; }
+* {
+	margin: 0px;
+	padding: 0px;
+	border-width: 0px;
+}
+
+html, body {
+	width: 100%;
+	height: 100%;
+	background-color: red;
+}
 
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+	margin: 0;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+		'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+		sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+	font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+		monospace;
 }
 
 
 .pre-line {
-  white-space: pre-line;
+	white-space: pre-line;
 }
 
-#root
-  { height: 100%; }
+#root {
+	height: 100%;
+}
 
-#leftpane
-  { box-sizing: border-box;
-    height: 100%;
-    overflow:   auto;
+#leftpane {
+	box-sizing: border-box;
+	height: 100%;
+	overflow: auto;
 
-    font-size:  14px;
- 
-    padding: 8px;
-    border: 8px solid;
-    border-color: lightgray;
-    color:  rgb(218, 252, 218);
-    background-color: rgb(11, 15, 1);
-    }
+	font-size: 14px;
 
-#fsmlogo
-  { text-align: center;
-    font-size:  14px; }
+	padding: 8px;
+	border: 8px solid;
+	border-color: lightgray;
+	color: rgb(218, 252, 218);
+	background-color: rgb(11, 15, 1);
+}
 
-#fsmlog
-  { font-size:  14px; }
+#fsmlogo {
+	text-align: center;
+	font-size: 14px;
+}
 
-#inbox 
-  { width: 100%;
-    padding-bottom: 14px;
-    outline: none;
-    border-style:   hidden;
-    border-width:   0px;
-    font-size:  14px;
-    color:  rgb(218, 252, 218);
-    background-color: rgb(11, 15, 1); }
+#fsmlog {
+	font-size: 14px;
+}
 
-#inputform, #prompt
-  { float: left; }    
+#inbox {
+	width: 100%;
+	padding-bottom: 14px;
+	outline: none;
+	border-style: hidden;
+	border-width: 0px;
+	font-size: 14px;
+	color: rgb(218, 252, 218);
+	background-color: rgb(11, 15, 1);
+}
 
-#prompt
-  { padding-right: 8px; }
+#inputform, #prompt {
+	float: left;
+}
+
+#prompt {
+	padding-right: 8px;
+}
