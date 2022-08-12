@@ -40,7 +40,7 @@ class Fsmlogo extends React .Component {
                                      FSML                           \n\
           ==========================================================\n\
           \n\
-          FSML 0.3.0, (c) 2021, 2022 Alexander (Shurko) Stadnichenko\n\
+          FSML 0.3.1, (c) 2021, 2022 Alexander (Shurko) Stadnichenko\n\
           Type 'help' to FSML help you,\n\
           'license' to view BSD license, 'bb' to farewell\n"; }
 

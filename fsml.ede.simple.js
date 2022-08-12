@@ -4,8 +4,8 @@
 /* FSML programming language elementary IDE */
 /* (c) 2021, 2022 Alexander Stadnichenko */
 /* License : BSD */
-/* Ver : 0.3.0 */
-/* Upd : 22.01.23 */
+/* Ver : 0.3.1 */
+/* Upd : 22.08.12 */
 
 
 import { fsml } from './fsml.js';

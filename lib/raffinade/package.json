@@ -1,0 +1,21 @@
+{
+  "type": "module",
+  "name": "raffinade",
+  "version": "0.0.14",
+  "description": "Goodies for CoffeeScript",
+  "main": "JS/raffinade.js",
+  "scripts": {
+    "recompile-all": "coffee --bare --no-header -co JS/ CS/",
+    "test": "echo \"No test specified\" && exit 1"
+  },
+  "keywords": [
+    "CoffeeScript",
+    "prefix",
+    "postfix"
+  ],
+  "author": "Alexander (Shurko) Stadnichenko",
+  "license": "BSD-2-Clause",
+  "devDependencies": {
+    "coffeescript": "^2.7.0"
+  }
+}
