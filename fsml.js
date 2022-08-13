@@ -43,6 +43,7 @@ import { cl } from './lib/raffinade/JS/raffinade.js';
 let cr = "<br>";
 let bl = " ";
 
+
 /* if default 'fsmlog_type' not overriden, accumulate fsml output for return to
 environmen at end of compilation */
 
@@ -136,13 +137,6 @@ function get_fsml_instance() {
 
 	const environment = { ... _environment };
 	return { environment }; }
-
-
-/*
-var fsmlog_type = function (fsml_out)
-  { fsmlog_type = fsml .environment .fsmlog_type;
-	fsmlog_type (fsml_out); }
-*/
 
 
 function deep_copy ()
