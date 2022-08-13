@@ -4,8 +4,8 @@
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2022 Alexander (Shurko) Stadnichenko */
 /* License : BSD */
-/* Ver : 0.3.1 */
-/* Upd : 22.08.12 */
+/* Ver : 0.3.2 */
+/* Upd : 22.08.13 */
 
 
 // TODO Refactor, unordereds, proper ordering, debug, refine, return
@@ -35,15 +35,13 @@
 /* eslint-disable */
 
 
-import { cl } from './lib/raffinade/JS/raffinade.js'
+import { cl } from './lib/raffinade/JS/raffinade.js';
 
 
 
 
 let cr = "<br>";
-
-
-let fsml = {};
+let bl = ' ';
 
 /* if default 'fsmlog_type' not overriden, accumulate fsml output for return to
 environmen at end of compilation */
@@ -52,8 +50,31 @@ let output_buffer = '';
 
 const default_fsmlog_type = (text) => output_buffer += text;
 
-let BSD_license = 
-`${cr}Copyright (c) 2021 Alexander (Shurko) Stadnichenko ${cr}All rights reserved. ${cr} ${cr}Redistribution and use in source and binary forms, with or without ${cr}modification, are permitted provided that the following conditions are met: ${cr} ${cr}1. Redistributions of source code must retain the above copyright notice, this ${cr}   list of conditions and the following disclaimer. ${cr}2. Redistributions in binary form must reproduce the above copyright notice, ${cr}   this list of conditions and the following disclaimer in the documentation ${cr}   and/or other materials provided with the distribution. ${cr} ${cr}THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ${cr}ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED ${cr}WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE ${cr}DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ${cr}ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES ${cr}(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; ${cr}LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ${cr}ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT ${cr}(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS ${cr}SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.`;
+let BSD_license =
+	` \
+	Copyright (c) 2021, 2022 Alexander (Shurko) Stadnichenko${cr}\
+	${cr}\
+	All rights reserved. Redistribution and use in  source and binary forms, with or${cr}\
+	without modification, are  permitted provided that the  following conditions are${cr}\
+	met:${cr}\
+	${cr}\
+	1. Redistributions of source  code must retain the above  copyright notice, this${cr}\
+	list of conditions and the following disclaimer.${cr}\
+	${cr}\
+	2. Redistributions in  binary form  must reproduce  the above  copyright notice,${cr}\
+	this list of conditions and the following disclaimer in the documentation and/or${cr}\
+	other materials provided with the distribution.${cr}\
+	${cr}\
+	THIS  SOFTWARE IS  PROVIDED  BY THE  COPYRIGHT HOLDERS  AND  CONTRIBUTORS AS  IS${cr}\
+	AND  ANY EXPRESS  OR  IMPLIED WARRANTIES,  INCLUDING, BUT  NOT  LIMITED TO,  THE${cr}\
+	IMPLIED WARRANTIES OF  MERCHANTABILITY AND FITNESS FOR A  PARTICULAR PURPOSE ARE${cr}\
+	DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT  OWNER OR CONTRIBUTORS BE LIABLE FOR${cr}\
+	ANY DIRECT,  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,  OR CONSEQUENTIAL DAMAGES${cr}\
+	(INCLUDING, BUT  NOT LIMITED  TO, PROCUREMENT OF  SUBSTITUTE GOODS  OR SERVICES;${cr}\
+	LOSS OF USE,  DATA, OR PROFITS; OR BUSINESS INTERRUPTION)  HOWEVER CAUSED AND ON${cr}\
+	ANY  THEORY  OF  LIABILITY,  WHETHER  IN CONTRACT,  STRICT  LIABILITY,  OR  TORT${cr}\
+	(INCLUDING NEGLIGENCE OR  OTHERWISE) ARISING IN ANY  WAY OUT OF THE  USE OF THIS${cr}\
+	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.${cr}`;
 
 
 var fsml_systate =
@@ -73,25 +94,39 @@ var js_operation_priority =
 var new_str_uid = 
 	(function (){
 		var uids = {};
-		return function (prefix)
-		  { if (prefix in uids ^ true)
-			  { uids [prefix] = 0; }
+
+		return function (prefix) {
+
+			if (prefix in uids ^ true)
+				uids [prefix] = 0;
+
 			return prefix +"_" +uids [prefix]++; }})();
 
 
 let current_stack = new Abstract_stack ();
 
 
-fsml = {
-	environment: {
-		fsmlog_type: default_fsmlog_type,
-		fsml_type_stack: type_stack, // Compiler should not print anything by sels
-		fsml_eval }};
+
+const _environment =
+{
+	fsmlog_type: default_fsmlog_type,
+	fsml_type_stack: type_stack, // Compiler should not print anything by self
+	fsml_eval
+};
 
 
+function get_fsml_instance() {
+
+	const environment = { ... _environment };
+	return { environment }; }
+
+
+const fsmlog_type = default_fsmlog_type;
+/*
 var fsmlog_type = function (fsml_out)
-  { fsmlog_type = fsml .environment .fsmlog_type; 
+  { fsmlog_type = fsml .environment .fsmlog_type;
 	fsmlog_type (fsml_out); }
+*/
 
 
 function deep_copy ()
@@ -280,7 +315,7 @@ as_proto .type_stack = function ()
 
 as_proto .translate_to_js = function ()
   { var self = this;
-	var indent_string = "&nbsp;" .repeat (current_stack .indent_size);
+	var indent_string =  bl .repeat (current_stack .indent_size);
 	fsml_systate .need_full_substitution = false;
 	this .uids_already_in_equation_left = [];
 	this .str_uids_to_rename = [];
@@ -351,9 +386,9 @@ as_proto .translate_to_js = function ()
 	  { var comma = "";
 		str_uids_to_rename .forEach (function (item, index)
 		  { current_stack .aliastatement += comma +item +"_copy" +" = " +item;
-			comma = "," +cr +indent_string +"&nbsp;" .repeat (15); });
+			comma = "," +cr +indent_string + bl .repeat (15); });
 		if (current_stack .aliastatement)
-		  { current_stack .aliastatement = cr +indent_string +"&nbsp;" .repeat (8) +"var " +current_stack .aliastatement +";" +cr; } }
+		  { current_stack .aliastatement = cr +indent_string + bl .repeat (8) +"var " +current_stack .aliastatement +";" +cr; } }
 
 	if (current_stack .isloop)
 	  { current_stack .target_text = current_stack .aliastatement +current_stack .target_text; } }
@@ -365,7 +400,7 @@ function translate_empty_quotation (indent_size, item_names, another_item_names)
 	var assign_statement = "";
 	let comma = "", equation = "";
 
-	var indent_string = "&nbsp;" .repeat (indent_size);
+	var indent_string =  bl .repeat (indent_size);
 	
 	item_names = item_names || [];
 
@@ -504,14 +539,25 @@ function synonymous (compex)
 
 
 function fsml_eval (fsml_in)
-  { fsml_in = alt_split (fsml_in);
-	for (var i in fsml_in)
-	  { compile_term (fsml_in [i][0], fsml_in [i][1]); };
-	if (output_buffer !== '')
-	  { const buffer_output = output_buffer;
+{
+	try {
+		fsml_in = alt_split (fsml_in);
+
+		for (let i in fsml_in)
+			compile_term (fsml_in [i][0], fsml_in [i][1]);
+
+		const buffer_output = output_buffer;
 		output_buffer = '';
-		return buffer_output; }
-	else return undefined; }
+
+		return buffer_output || undefined;
+
+	} catch (exc) {
+		exc = exc .toString ();
+
+		fsmlog_type (`${cr}${cr}Environment exception: ${cr}${cr}`)
+		fsmlog_type (exc);
+	}
+}
 
 
 function type_stack ()
@@ -690,13 +736,16 @@ function dot_js_semantics ()
 	fsmlog_type (current_stack .get_target_text ()); }
 
 
-function eval_semantics ()
-  { current_stack .translate_to_js (); // Upd jsource
+function eval_semantics () {
+	
+	current_stack .translate_to_js (); // Upd jsource
 
 	var evalstr =
-		"(function (){ "
-	   +(current_stack .get_target_text () +current_stack .get_return_statement ()) .replace (new RegExp (cr, 'g'), "") .replace (/\&nbsp;/g,"")
-	   +" })();";
+		"(function (){ " +
+		(current_stack .get_target_text () +current_stack .get_return_statement ())
+			.replace (new RegExp (cr, 'g'), "")
+			.replace (/\&nbsp;/g,"") +
+		" })();";
 
 	current_stack .evalresult = eval (evalstr); }
 
@@ -1171,7 +1220,7 @@ function if_target_translation_semantics (operand, if_object)
 	nested_text_else = _nested_text;
 	rename_str_uids_else = _rename_str_uids;
 
-	var indent_string = "&nbsp;" .repeat (current_stack .indent_size);
+	var indent_string =  bl .repeat (current_stack .indent_size);
 
 	var target_text = cr +indent_string +"if (" +condition_str_uid +") {"
 					 +nested_text
@@ -1301,7 +1350,7 @@ function while_target_translation_semantics (operand, while_object)
 	nested_text = _nested_text;
 	rename_str_uids = _rename_str_uids;
 
-	var indent_string = "&nbsp;" .repeat (current_stack .indent_size);
+	var indent_string =  bl .repeat (current_stack .indent_size);
 
 	var target_text = cr +indent_string +"do { "
 					 +nested_text
@@ -1499,5 +1548,5 @@ function time_semantics ()
 	current_stack .set_flag ("no-pure-presented"); }
 
 
-export {fsml};
+export { get_fsml_instance };
 
