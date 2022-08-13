@@ -31,32 +31,39 @@ function fsmlog_type (fsml_out)
   { fsml_out = fsml_out .replace (/ /g, "&nbsp;");
 	fsmlog .innerHTML += "\n<br>" +fsml_out; }
 
+
 /*
-Now don't send custom type function to compiler
-fsml .environment .fsmlog_type = fsmlog_type;
+	It's possible to send a custom typing function to the compiler for hi type
+	text directly, but this doesn't look like the best idea
+
+	fsml .environment .set_fsmlog_type (fsmlog_type);
 */
+
 
 function handle_submit (e) {
 	e .preventDefault ();
 
+	const scroll_amount = 1000;
+
 	const inbox = e .target .children [0];
-	const fsml_eval = fsml .environment .fsml_eval,
-		fsml_in = inbox .value;
-  
+	const fsml_in = inbox .value;
 	inbox .value = "";
 
 	fsmlog_type (fsml_in);
 	
-	const fsml_eval_result = fsml_eval (fsml_in);
+	const fsml_eval_result = fsml .environment .fsml_eval (fsml_in);
 	
-	if (fsml_eval_result)
-	  fsmlog_type (fsml_eval_result);
+	fsml_eval_result &&
+		fsmlog_type (fsml_eval_result);
 
-	const r = fsml .environment .fsml_type_stack ();
-	if (r) fsmlog_type (r);
+	const fsml_response = fsml .environment .fsml_type_stack ();
+	
+	fsml_response &&
+		fsmlog_type (fsml_response);
 
-	lp .scrollBy (0, 1000); }
+	lp .scrollBy (0, scroll_amount); }
 
-window .addEventListener ("contextmenu", e => e .preventDefault(), false);
+
+window .addEventListener ("contextmenu", e => e .preventDefault (), false);
 inputform .addEventListener ("submit", handle_submit, false);
 

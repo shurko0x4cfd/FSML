@@ -41,7 +41,7 @@ import { cl } from './lib/raffinade/JS/raffinade.js';
 
 
 let cr = "<br>";
-let bl = ' ';
+let bl = " ";
 
 /* if default 'fsmlog_type' not overriden, accumulate fsml output for return to
 environmen at end of compilation */
@@ -49,6 +49,7 @@ environmen at end of compilation */
 let output_buffer = '';
 
 const default_fsmlog_type = (text) => output_buffer += text;
+let fsmlog_type = default_fsmlog_type;
 
 let BSD_license =
 	` \
@@ -83,12 +84,24 @@ var fsml_systate =
 
 var stacks_chain = [];
 
-var js_operation_priority =
-  { ">": 0,
-	"+": 1, "-": 1,
-	"*": 2, "/": 2,
-	"**": 3,
-	"leaf": 100 };
+
+/* Precedence target language operations (JS) */
+let js_operation_precedence =
+	[
+		/*  0 */ [">"],
+		/*  1 */ ["+", "-"],
+		/*  2 */ ["*", "/"],
+		/*  3 */ ["**"]
+	];
+
+let f = (acc, arrg, idx) =>
+	(arrg .forEach (itm => acc [itm] = idx), acc);
+
+js_operation_precedence =
+	js_operation_precedence
+		.reduce (f, {});
+
+js_operation_precedence .leaf = 100;
 
 
 var new_str_uid = 
@@ -106,9 +119,13 @@ var new_str_uid =
 let current_stack = new Abstract_stack ();
 
 
+const set_fsmlog_type = (type_fsmlog) =>
+	fsmlog_type = type_fsmlog;
+
 
 const _environment =
-{
+{	
+	set_fsmlog_type,
 	fsmlog_type: default_fsmlog_type,
 	fsml_type_stack: type_stack, // Compiler should not print anything by self
 	fsml_eval
@@ -121,7 +138,6 @@ function get_fsml_instance() {
 	return { environment }; }
 
 
-const fsmlog_type = default_fsmlog_type;
 /*
 var fsmlog_type = function (fsml_out)
   { fsmlog_type = fsml .environment .fsmlog_type;
@@ -1404,7 +1420,7 @@ function minus_target_translation_semantics (operand)
 
 
 function wrap_by_parenthesis (str, suboperand, operand_name)
-  { if (js_operation_priority [suboperand .operator. true_name] < js_operation_priority [operand_name])
+  { if (js_operation_precedence [suboperand .operator. true_name] < js_operation_precedence [operand_name])
 		{ return "(" +str +")"; }
 	else
 		{ return str; }}
