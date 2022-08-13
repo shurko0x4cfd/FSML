@@ -5,7 +5,7 @@
 /* (c) 2021, 2022 Alexander Stadnichenko */
 /* License : BSD */
 /* Ver : 0.3.2 */
-/* Upd : 22.08.12 */
+/* Upd : 22.08.13 */
 
 
 import { get_fsml_instance } from './fsml.js';
@@ -14,13 +14,6 @@ import { get_fsml_instance } from './fsml.js';
 
 
 const fsml = get_fsml_instance ();
-
-/*
-const lp = document .getElementById ("leftpane");
-const inputform = document .getElementById ("inputform");
-// const inbox = document .getElementById ("inbox");
-const fsmlog = document .getElementById ("fsmlog");
-*/
 
 const [lp, inputform, fsmlog] =
 	["leftpane", "inputform", "fsmlog"]
