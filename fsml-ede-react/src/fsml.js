@@ -3,34 +3,9 @@
 
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2022 Alexander (Shurko) Stadnichenko */
-/* License : BSD */
-/* Ver : 0.3.2 */
-/* Upd : 22.08.14 */
-
-
-// TODO Refactor, unordereds, proper ordering, debug, refine, return
-//      statement,
-//      push/pop, access by index, escape/unescape, hash, native injection,
-//      auto expressions reduce == constant precomputing, refine stack output,
-//      comments, stack type switcher, stack type style switcher,
-//      automatic testing, Q1 Q2 *, two text style,
-//      Mode of everlasting ], <switcher/trigger> alternates?,
-//      sequences, referencing, load/import/include,
-//      arbitrary environment functions, loops,
-//      true recursion, exceptions,
-
-//      [<num>] <constant> == <expression> -> ...
-
-//      'eval
-//      return: [ ... ], stack: [ ... ]'
-
-
-// TODO Excogitate : Elegance, security, robust, modularity, self-explanatory,
-//      simplicity, reusability, paradigm, recursive frozen?
-
-// TODO Document : 'nowalk', 'envariable', 'nopure', 'need_id_substitution' and so
-
-// fsmin, dram, i - independent or individual
+/* License : BSD-2-Clause */
+/* Ver : 0.3.3 */
+/* Upd : 22.08.17 */
 
 /* eslint-disable */
 
@@ -41,19 +16,32 @@ import { some } from './lib/unsorted.js';
 
 
 
+/* Defaults for formatting output text */
+
 let cr = "\n";
 let bl = " ";
 
 
-/* if default 'fsmlog_type' not overriden, accumulate fsml output for return to
-environmen at end of compilation */
+/* if default 'fsmlog_type' is not overriden, accumulate fsml output for return
+   to environmen at end of compilation. Otherwise use external 'fsmlog_type'
+   for type immediately */
 
 let output_buffer = '';
 
-const default_fsmlog_type = (text) => output_buffer += text;
+
+/** Default way to output is just accumulate output in buffer and then return
+ * it to caller
+ * @arg		{string} text	Append id to output
+ * @return	{string}		Output buffer
+ */
+const default_fsmlog_type = (text) =>
+	output_buffer += text;
+
+/* And set it as default until overriden */
 let fsmlog_type = default_fsmlog_type;
 
-let BSD_license =
+
+let BSD_2_Clause_license =
 	` \
 	Copyright (c) 2021, 2022 Alexander (Shurko) Stadnichenko${cr}\
 	${cr}\
@@ -80,14 +68,16 @@ let BSD_license =
 	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.${cr}`;
 
 
-var fsml_systate =
-  { need_full_substitution: false,
-	quote_default_type: '"', };
+const fsml_systate =
+{
+	need_full_substitution: false,
+	quote_default_type: '"'
+};
 
 var stacks_chain = [];
 
 
-/* Precedence target language operations (JS) */
+/* Precedence of target language operations (JS) */
 let js_operation_precedence =
 	[
 		/*  0 */ [">"],
@@ -96,9 +86,14 @@ let js_operation_precedence =
 		/*  3 */ ["**"]
 	];
 
+
+/* Now and below senseles short names like f, g, h for function factored out
+   Immediately before it user */
+
 let f = (acc, arrg, idx) =>
 	(arrg .forEach (itm => acc [itm] = idx), acc);
 
+/* Convert to object operation: precedence */
 js_operation_precedence =
 	js_operation_precedence
 		.reduce (f, {});
@@ -106,39 +101,45 @@ js_operation_precedence =
 js_operation_precedence .leaf = 100;
 
 
-var new_str_uid = 
-	(function (){
-		var uids = {};
-
-		return function (prefix) {
-
-			if (prefix in uids ^ true)
-				uids [prefix] = 0;
-
-			return prefix +"_" +uids [prefix]++; }})();
+/**
+ * Generator of unique (within session) string id like subex_0, cond_1 etc
+ * @arg		{string} prefix String prefix for uid like "subex" or "cond"
+ * @return	{string}		Unique string identifier
+ */
+const new_str_uid = 
+	((uids = {}) =>
+		prefix =>
+			(prefix in uids ^ true
+				&& (uids [prefix] = 0),
+			 prefix + "_" + uids [prefix] ++))();
 
 
 let current_stack = new Abstract_stack ();
 
 
-const set_fsmlog_type = (type_fsmlog) =>
-	fsmlog_type = type_fsmlog;
+/**
+ * Set external callback as typer instead of accumulate in output buffer
+ * @arg		{Function} external_fsmlog_type	External callback provide typing
+ * @returns {Function}						Same as arg
+ */
+const set_fsmlog_type = (external_fsmlog_type) =>
+	fsmlog_type = external_fsmlog_type;
 
 
-const _environment =
-{	
-	set_fsmlog_type,
-	fsmlog_type: default_fsmlog_type,
-	fsml_type_stack: type_stack, // Compiler should not print anything by self
-	fsml_eval
-};
+/**
+ * Export object with collection of procedures as FSML external interface
+ * @return	{Object}	Provide interface to FSML engine
+ */
+const get_fsml_instance = () =>
+	({
+		set: { typer: set_fsmlog_type },
+		type: fsmlog_type,
+		stack: { type: type_stack },
+		eval: fsml_eval
+	});
 
 
-function get_fsml_instance() {
-
-	const environment = { ... _environment };
-	return { environment }; }
-
+/** Perform deep copy of one top stack item */
 
 function deep_copy ()
   { var new_object = new this .constructor ();
@@ -164,7 +165,7 @@ function deep_copy ()
 	return new_object; }
 
 
-function Abstract_stack (container)
+function Abstract_stack (/* container */)
   { this .dc = deep_copy;
 
 	this .dc_postprocess = function (obj)
@@ -572,7 +573,7 @@ function fsml_eval (fsml_in)
 
 
 function type_stack ()
-  { return current_stack .type_stack (); }
+	{ return current_stack .type_stack (); }
 
 
 function alt_split (s)  // <-- Draft
@@ -1544,7 +1545,7 @@ function over_semantics ()
 
 
 function license_semantics ()
-	{ fsmlog_type (BSD_license); }
+	{ fsmlog_type (BSD_2_Clause_license); }
 
 
 // External environment functions

@@ -47,7 +47,7 @@ class Fsmlogo extends React .Component {
 			                            FSML                          \n\
 			==========================================================\n\
 			\n\
-			FSML 0.3.2, (c) 2021, 2022 Alexander (Shurko) Stadnichenko\n\
+			FSML 0.3.3, (c) 2021, 2022 Alexander (Shurko) Stadnichenko\n\
 			Type 'help' to FSML help you,\n\
 			'license' to view BSD license, 'bb' to farewell\n"; }
 
@@ -68,20 +68,18 @@ class Fsmlog extends React .Component {
 
 class Inbox extends React .Component {
 
-	constructor (props) {
+	constructor (props)
+	{
 		super (props);
 
 		this .state = {};
 		this .state .text = '';
-		this .fsml_eval = fsml .environment .fsml_eval;
-		this .get_stack = fsml .environment .fsml_type_stack;
 		this .enter_handler = this .enter_handler .bind (this);
 		this .change_handler = this .change_handler .bind (this);
 
-		// fsml .environment .fsmlog_type = this .props .send_news;
-
 		// If autofocus fail
-		setTimeout (() => { document .getElementById ('inbox') .focus () }, 2000); }
+		setTimeout (() => document .getElementById ('inbox') .focus (), 2000);
+	}
 
 	enter_handler (e) {
 		e .preventDefault ();
@@ -90,15 +88,14 @@ class Inbox extends React .Component {
 		const delay_before_scroll = 200;
 		
 		let send_news = this .props .send_news;
-
 		let logtext = this .state .text + '\n';
 		
-		let eval_result = this .fsml_eval (this .state .text);
+		let eval_result = fsml .eval (this .state .text);
 
 		if (eval_result)
 			logtext += '\n' + eval_result + '\n';
 		
-		let stack = this .get_stack ();
+		let stack = fsml .stack .type ();
 
 		if (stack)
 			logtext += stack + '\n' + '\n';
@@ -107,9 +104,7 @@ class Inbox extends React .Component {
 
 		send_news (logtext);
 
-		// console .log (logtext);
-
-		/* Show prompt */
+		/* Scroll for show prompt */
 		setTimeout
 			(() => document
 				.getElementById ('leftpane')
