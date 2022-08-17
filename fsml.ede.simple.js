@@ -21,15 +21,17 @@ const [lp, inputform, fsmlog] =
 
 
 function fsmlog_type (fsml_out)
-  { fsml_out = fsml_out .replace (/ /g, "&nbsp;");
-	fsmlog .innerHTML += "\n<br>" +fsml_out; }
+{
+	fsml_out = fsml_out .replace (/ /g, "&nbsp;");
+	fsmlog .innerHTML += "\n<br>" +fsml_out;
+}
 
 
 /*
 	It's possible to send a custom typing function to the compiler for hi type
 	text directly, but this doesn't look like the best idea
 
-	fsml .environment .set_fsmlog_type (fsmlog_type);
+	fsml .set .typer (fsmlog_type);
 */
 
 
@@ -44,12 +46,12 @@ function handle_submit (e) {
 
 	fsmlog_type (fsml_in);
 	
-	const fsml_eval_result = fsml .environment .fsml_eval (fsml_in);
+	const fsml_eval_result = fsml .eval (fsml_in);
 	
 	fsml_eval_result &&
 		fsmlog_type (fsml_eval_result);
 
-	const fsml_response = fsml .environment .fsml_type_stack ();
+	const fsml_response = fsml .stack .type ();
 	
 	fsml_response &&
 		fsmlog_type (fsml_response);
