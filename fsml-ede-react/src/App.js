@@ -9,6 +9,7 @@ import { get_fsml_instance } from './fsml.js';
 
 
 const fsml = get_fsml_instance ();
+const item_separator = " -> ";
 
 
 class FSMLConsole extends React .Component {
@@ -47,7 +48,7 @@ class Fsmlogo extends React .Component {
 			                            FSML                          \n\
 			==========================================================\n\
 			\n\
-			FSML 0.3.3, (c) 2021, 2022 Alexander (Shurko) Stadnichenko\n\
+			FSML 0.3.4, (c) 2021, 2022 Alexander (Shurko) Stadnichenko\n\
 			Type 'help' to FSML help you,\n\
 			'license' to view BSD license, 'bb' to farewell\n"; }
 
@@ -88,17 +89,20 @@ class Inbox extends React .Component {
 		const delay_before_scroll = 200;
 		
 		let send_news = this .props .send_news;
-		let logtext = this .state .text + '\n';
+
+		let logtext = this .state .text ? '\n\n' + this .state .text : '';
 		
-		let eval_result = fsml .eval (this .state .text);
+		let eval_result = fsml .eval (this .state .text) || '';
 
 		if (eval_result)
-			logtext += '\n' + eval_result + '\n';
+			logtext += '\n\n' + eval_result;
 		
-		let stack = fsml .stack .type ();
+		const stack = fsml .stack .type ();
 
-		if (stack)
-			logtext += stack + '\n' + '\n';
+		logtext += '\n\n' + '[' + fsml .stack .depth () + ']  ';
+
+		if (stack .length)
+			logtext += stack. join (item_separator);
 
 		this .setState ({ text: '' });
 
@@ -116,6 +120,7 @@ class Inbox extends React .Component {
 
 	render = () =>
 		(<div>
+			<p>&nbsp;</p>
 			<div id='prompt'>{'fsml >'}</div>
 		  
 			<form id = 'inputform'

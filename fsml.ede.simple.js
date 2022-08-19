@@ -4,8 +4,8 @@
 /* FSML programming language elementary IDE */
 /* (c) 2021, 2022 Alexander Stadnichenko */
 /* License : BSD */
-/* Ver : 0.3.2 */
-/* Upd : 22.08.13 */
+/* Ver : 0.3.4 */
+/* Upd : 22.08.19 */
 
 
 import { get_fsml_instance } from './fsml.js';
@@ -14,6 +14,7 @@ import { get_fsml_instance } from './fsml.js';
 
 
 const fsml = get_fsml_instance ();
+const item_separator = " -> ";
 
 const [lp, inputform, fsmlog] =
 	["leftpane", "inputform", "fsmlog"]
@@ -23,7 +24,7 @@ const [lp, inputform, fsmlog] =
 function fsmlog_type (fsml_out)
 {
 	fsml_out = fsml_out .replace (/ /g, "&nbsp;");
-	fsmlog .innerHTML += "\n<br>" +fsml_out;
+	fsmlog .innerHTML += "\n" +fsml_out;
 }
 
 
@@ -35,30 +36,35 @@ function fsmlog_type (fsml_out)
 */
 
 
-function handle_submit (e) {
-	e .preventDefault ();
+function handle_submit (evt)
+{
+	evt .preventDefault ();
 
 	const scroll_amount = 1000;
 
-	const inbox = e .target .children [0];
-	const fsml_in = inbox .value;
+	const inbox = evt .target .children [0];
+	const logtext = inbox .value;
 	inbox .value = "";
 
-	fsmlog_type (fsml_in);
-	
-	const fsml_eval_result = fsml .eval (fsml_in);
-	
+	logtext &&
+		fsmlog_type ('<br>&nbsp;<br>' + logtext);
+
+	const fsml_eval_result = fsml .eval (logtext) || '';
+		
 	fsml_eval_result &&
-		fsmlog_type (fsml_eval_result);
+		fsmlog_type ('<br>&nbsp;<br>' + fsml_eval_result);
 
-	const fsml_response = fsml .stack .type ();
-	
-	fsml_response &&
-		fsmlog_type (fsml_response);
+	const stack = fsml .stack .type ();
 
-	lp .scrollBy (0, scroll_amount); }
+	fsmlog_type ('<br>&nbsp;<br>' + '[' + fsml .stack .depth () + ']  ');
+
+	if (stack .length)
+		fsmlog_type (stack. join (item_separator));
+
+	lp .scrollBy (0, scroll_amount);
+}
 
 
-window .addEventListener ("contextmenu", e => e .preventDefault (), false);
+window .addEventListener ("contextmenu", evt => evt .preventDefault (), false);
 inputform .addEventListener ("submit", handle_submit, false);
 
