@@ -1,0 +1,222 @@
+<!doctype html> <!-- (c) 2022, Alexander (Shurko) Stadnichenko -->
+<html lang=en>
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="res/css/index.css" type="text/css" />
+	<title>FSML In His Grace</title>
+</head>
+
+<body>
+
+	<div class="wrapper">
+		<div class="verticont pading-top-16 pading-bottom-16">
+
+			<div class="h-padding-72"></div>
+
+			<div class="catch-bar"></div>
+
+			<div class="textitself">
+
+				<div class="main-header flex row justify-center fs-72 text-center">
+					FSML In His Grace
+				</div>
+
+				<div class="v-padding-72"></div>
+
+				<p>
+					FSML is a postfix concatenative homoiconic programming language designed to give me and everyone 
+					for those who wish a familiar, comfortable postfix programming environment and be competitive in 
+					modern realities, effective in every way. 
+
+				<p>
+					The development is in its infancy, so most of the document will be devoted to language concepts 
+					and its development plans, not what has already been done. Although for the seed , I will first 
+					show a few small examples of what has already been done. Then I will describe the concept. And at 
+					the end I will give you the technical details. I hope that the reader is generally familiar with 
+					postfix programming languages, such as Forth, Factor or 8th.
+				</p>
+
+				<p>
+					First of all, note that objects duplicated using standard combinators are available by reference,
+					not by value. In particular, this means the following.
+				</p>
+
+				<div class="source-code">
+					<p>
+						1 dup
+					</p>
+					<p>
+						[2] 1 -> 1
+					</p>
+					<p>
+						25 +
+					</p>
+					<p>
+						[2] 1 + 25 -> 1 + 25
+					</p>
+				</div>
+
+				<p>
+					Oops! This is not what you would expect from a Forth or a Factor. In these languages, the result
+					would be:
+				</p>
+
+				<div class="source-code">
+					<p>
+						1 dup
+					</p>
+					<p>
+						stack: 1 -> 1
+					</p>
+					<p>
+						25 +
+					</p>
+					<p>
+						stack: 26 -> 1
+					</p>
+				</div>
+
+				<p>
+					This is explained by the fact that in FSML, by duplicating a stack element using DUP, we actually 
+					duplicated a reference to an object, since an abstract stack can actually contain only references. 
+					Thus, both resulting stack elements are references to the same object. And by adding 25 to it, we 
+					made this object an expression of 25&nbsp;+&nbsp;1. Therefore, the top two elements of the stack 
+					refer to this expression.
+				</p>
+
+				<p>
+					Need "ind" after "dup" to detach. "ind" means independent or individual, at your choice. It 
+					creates a new object and rearranges the reference to it. This new object still references the same 
+					subexpression as before. But all subsequent operations on it will create a different semantic 
+					graph. From now on, they will have a different history of operations on them, imprinted in the 
+					nodes of abstract semantic graphs (asg). But what was done before "ind" will remain a common part 
+					of the history of operations on the element.
+				</p>
+
+				<div class="source-code">
+					<p>
+						1 dup ind
+					</p>
+					<p>
+						[2] 1 -> 1
+					</p>
+					<p>
+						25 +
+					</p>
+					<p>
+						[2]  1 + 25 -> 1
+					</p>
+				</div>
+
+				<p>
+					There is also a "dc" operation, which means deep copy. dc performs a deep copy of the asg 
+					corresponding to the stack element. From this moment on, a completely new graph appears, which has 
+					no vertices in common with the original one. The new graph is not an exact copy of the original 
+					one. For example, the vertices of a graph may contain uids, which by definition cannot be the same 
+					as in the prototype.
+				</p>
+
+
+
+				<p>
+					1. Calculate the factorial of a number &nbsp;12 using if и while&nbsp;:
+				</p>
+
+				<div class="source-code">
+					<p>
+						12 dup [ 1 [ over * over 1 - ] while swap dp ] [ 0 ] if .eval
+					</p>
+					<p>
+						\ [479001600]
+					</p>
+				</div>
+
+				<p>
+					2. Read and write the variable in the good old touching Fort-style using @ и&nbsp;!&nbsp;:
+				</p>
+
+				<div class="source-code">
+					<p>
+						123 some_name !
+						<br> 456 +
+						<br> .eval dp
+					</p>
+					<p>
+						\ [ 579 ]
+					</p>
+				</div>
+
+				<p>
+					3. Strings&nbsp;:
+				</p>
+
+				<div class="source-code">
+					<p>
+						'We put a string with spaces on the stack and immediately drop it using dp' dp
+					<div></div>
+					<br> 'dp is a short alias for the classic drop' dp
+					<div></div>
+					<br> 'Without indentation between the left quotation mark and the beginning of the line, this is
+							not necessary here' dp
+					<div></div>
+					<br> "Or with double quotes" dp
+					<div></div>
+					<br> Or_without_quotes_at_all_if_the_string_does_not_contain_whitespace_characters_dp
+					<div></div>
+					<br> '\ Full-fledged comments have not yet been implemented, so for now it is also for comments, 
+							although the string start can be from the backslash of the Forth comment, so that it is 
+							clear, but still it is only a string' dp 
+					</p>
+				</div>
+
+				<p>
+					4. Gluing the lines together in a loop&nbsp;:
+				</p>
+
+				<div class="source-code">
+					<p>
+						"" comma !
+						<br> 2 "" [ comma @ + ' somename_' + over + '_alias = somename_'
+						<br> + over + ', ' comma ! over 1 - ] while swap dp
+						<br> 'var ' swap + ';' +
+						<br> .eval dp
+					</p>
+					<p>
+						\ [var somename_2_alias = somename_2, somename_1_alias = somename_1;]
+					</p>
+				</div>
+
+				<p>
+
+
+				</p>
+
+				<p>
+
+				</p>
+
+				<p>
+				</p>
+
+				<div class="v-padding-72"></div>
+
+				<p class="flex justify-center">
+					© 2022 Alexander (Shurko) Stadnichenko
+				</p>
+
+			</div>
+
+			<div class="padding-v-bar-8"></div>
+
+			<div class="catch-bar"></div>
+
+			<div class="h-padding-72"></div>
+
+		</div>
+	</div>
+
+</body>
+
+</html>

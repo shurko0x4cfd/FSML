@@ -1,0 +1,130 @@
+/**/
+
+* {
+    margin: 0px;
+    padding: 0px;
+    box-sizing: border-box;
+}
+
+html, body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: whitesmoke;
+}
+
+.flex {
+    display: flex;
+}
+
+.col {
+    flex-direction: column;
+}
+
+.row {
+    flex-direction: row;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    height: 100%;
+}
+
+.verticont {
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    justify-content: center;
+    height: 100%;
+}
+
+.textitself {
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+    width: 960px;
+    height: 100%;
+    padding-left: 72px;
+    padding-right: 72px;
+    padding-top: 72px;
+    text-align: right;
+    text-align: justify;
+    font-family: monospace;
+    font-size: 16px;
+}
+
+.catch-bar {
+    display: flex;
+    min-width: 16px;
+    /* margin-top: 16px;
+    margin-bottom: 16px; */
+    border-style: dotted;
+    border-width: 2px;
+    border-color: indigo;
+}
+
+.padding-v-bar-8 {
+    display: flex;
+    width: 8px;
+    border-width: 2px;
+}
+
+.textitself p {
+    display: flex;
+    padding-top: 16px;
+}
+
+.source-code {
+    margin-top: 16px;
+    margin-bottom: 16px;
+    padding: 16px;
+    padding-bottom: 32px;
+    background-color: darkolivegreen;
+    color: whitesmoke;
+    font-family: monospace;
+}
+
+
+/**/
+
+.fs-72 {
+    font-size: 72px;
+}
+
+.pading-top-16 {
+    padding-top: 16px;
+}
+
+.pading-bottom-16 {
+    padding-bottom: 16px;
+}
+
+.v-padding-72 {
+    display: flex;
+    flex-direction: row;
+    min-height: 72px;
+}
+
+.h-padding-72 {
+    display: flex;
+    flex-direction: row;
+    min-width: 72px;
+}
+
+.t {
+    width: 300px;
+    background-color: burlywood;
+}
+
+
+/**/
