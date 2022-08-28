@@ -4,11 +4,13 @@
 /* FSML programming language elementary IDE */
 /* (c) 2021, 2022 Alexander Stadnichenko */
 /* License : BSD */
-/* Ver : 0.3.4 */
-/* Upd : 22.08.19 */
+/* Ver : 0.3.6 */
+/* Upd : 22.08.27 */
+
+/* eslint-disable */
 
 
-import { get_fsml_instance } from './fsml.js';
+import { get_fsml_instance } from '../dist/fsml.js';
 
 
 
@@ -21,15 +23,12 @@ const [lp, inputform, fsmlog] =
 		.map (id => document .getElementById (id));
 
 
-function fsmlog_type (fsml_out)
-{
-	fsml_out = fsml_out .replace (/ /g, "&nbsp;");
-	fsmlog .innerHTML += "\n" +fsml_out;
-}
+const fsmlog_type = fsml_out =>
+	fsmlog .innerHTML += fsml_out;
 
 
 /*
-	It's possible to send a custom typing function to the compiler for hi type
+	It's possible to send a custom typing function to the compiler for his type
 	text directly, but this doesn't look like the best idea
 
 	fsml .set .typer (fsmlog_type);
@@ -47,16 +46,16 @@ function handle_submit (evt)
 	inbox .value = "";
 
 	logtext &&
-		fsmlog_type ('<br>&nbsp;<br>' + logtext);
+		fsmlog_type ("\n\n" + logtext);
 
 	const fsml_eval_result = fsml .eval (logtext) || '';
 		
 	fsml_eval_result &&
-		fsmlog_type ('<br>&nbsp;<br>' + fsml_eval_result);
+		fsmlog_type ("\n\n" + fsml_eval_result);
 
 	const stack = fsml .stack .type ();
 
-	fsmlog_type ('<br>&nbsp;<br>' + '[' + fsml .stack .depth () + ']  ');
+	fsmlog_type ("\n\n" + '[' + fsml .stack .depth () + ']  ');
 
 	if (stack .length)
 		fsmlog_type (stack. join (item_separator));

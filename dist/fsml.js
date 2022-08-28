@@ -4,20 +4,20 @@
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2022 Alexander (Shurko) Stadnichenko */
 /* License : BSD-2-Clause */
-/* Ver : 0.3.4 */
-/* Upd : 22.08.19 */
+/* Ver : 0.3.7 */
+/* Upd : 22.08.27 */
 
 /* eslint-disable */
 
 
-import { cl } from './lib/raffinade/JS/raffinade.js';
 
 
+const cl = console .log;
 
 
 /* Defaults for formatting output text */
 
-let cr = "<br>";
+let cr = "\n";
 let bl = " ";
 
 
@@ -142,11 +142,7 @@ const get_fsml_instance = () =>
 	});
 
 
-function stack_depth  ()
-	{ return current_stack .depth () }
-
-
-/** Perform deep copy of one top stack item */
+/** Perform deep copy of one top stack item. Quite obsoleted */
 
 function deep_copy ()
 {
@@ -179,19 +175,24 @@ function deep_copy ()
 				|| item .constructor === {} .constructor)
 					new_object [i] = deep_copy .apply (item);
 
-	if (this .dc_postprocess) { new_object = this .dc_postprocess (new_object); }
+	if (this .dc_postprocess)
+		new_object = this .dc_postprocess (new_object);
 
 	return new_object;
 }
 
 
 function Abstract_stack (/* container */)
-  { this .dc = deep_copy;
+{
+	this .dc = deep_copy;
 
 	this .dc_postprocess = function (obj)
-	  { obj .str_uid = new_str_uid ("quotation");
+	{
+		obj .str_uid = new_str_uid ("quotation");
 		obj .actual_target_names = false;
-		return obj; }
+
+		return obj;
+	}
 
 	this .str_uid = new_str_uid ("quotation");
 
@@ -201,8 +202,12 @@ function Abstract_stack (/* container */)
 	// of target language in copy because old names belong to original quotation
 	this .actual_target_names = true;
 
-	this .utmost_computing_order = 0; // Indexes is comparative, absolute value has no matter
-	this .pseudo_order = 0; // For translation with no assign real order for stackitems
+	// Indexes is comparative, absolute value is never matter
+	this .utmost_computing_order = 0;
+
+	// For translation with no assign real order for stackitems
+	this .pseudo_order = 0;
+
 	this .tail_starts_from = 0; // Even if container presented ?
 	this .container = [];
 	this .assignments = [];
@@ -229,14 +234,16 @@ function Abstract_stack (/* container */)
 	this .return_items = [];
 	this .evalresult = undefined;
 	this .uids_already_in_equation_left = [];
-	this .str_uids_to_rename = []; }
+	this .str_uids_to_rename = [];
+}
 
 
 var as_proto = Abstract_stack .prototype;
 
 as_proto .depth = function () { return this .container .length; }
 
-as_proto .items_digest = function () { return this .container .slice (); }
+as_proto .items_digest =
+	function () { return this .container .slice (); }
 
 as_proto .push = function (item) { this .container .push (item); }
 
@@ -356,22 +363,18 @@ as_proto .translate_to_js = function ()
 	// ! write to targrt_str_uid have no effect to suppliers
 	this .item_names .forEach ((item, index) =>
 		{
-			var element = self .container [index] .compex;
+			const element = self .container [index] .compex;
+			
 			element .target_str_uid = item;
-		});
 
-	this .item_names .forEach ((item, index) =>
-		{
-			var element = self .container [index] .compex;
-
-			if (element .check_flag ("deliverer"))
+			element .check_flag ("deliverer") &&
 				element .set_target_str_uid (item);
 		});
 
 	this .order_subexpressions ();
 
 	this .target_text = "";
-	let specr = ""; // <- For avoid first cr
+	let specr = "\n"; // <- For avoid first cr. Not in use
 
 	function process_expression (item, index)
 	{
@@ -383,18 +386,31 @@ as_proto .translate_to_js = function ()
 		var syn = "", syn_declarations = "", comma = "";
 
 		if (syn_list .length > 1)
-		  { syn_declarations = specr +indent_string +"var ";
+		{
+			syn_declarations = specr + indent_string + "var ";
 		  	specr = cr;
-			syn_list .forEach (function (item)
-			  { if (!item)
-				  { cl ("item undefined or \"\"");
+
+			syn_list .forEach (item =>
+			{
+				if (!item) // ! Can be undefined, is issue and call for fix
+				{
+					cl ("item undefined or \"\"");
 					cl (item);
-					return }; // ! Can be undefined, is issue and call for fix
-				if (item === translated_expression) { return; }
-				syn += item +" = ";
-				syn_declarations += comma +item;
-				comma = ", "; });
-			syn_declarations += ";"; }
+
+					fsmlog_type ('item undefined or ""');
+
+					return;
+				}
+
+				if (item === translated_expression) return;
+
+				syn += item + " = ";
+				syn_declarations += comma + item;
+				comma = ", ";
+			});
+
+			syn_declarations += ";";
+		}
 
 		if (syn_list .length === 1)
 		{
@@ -405,26 +421,35 @@ as_proto .translate_to_js = function ()
 
 			if (syn_item && (syn_item === translated_expression))
 				syn = ""; // "/* Tautology '" +syn_item +" = " +syn_item +"' excluded */"; } }
-			} 
+		} 
 
 		let target_str_uid = compex .get_target_str_uid ();
 
 		if (compex .operator .check_flag ("no_equation") || compex .check_flag ("no_equation"))
 		{
-			self .target_text += specr +translated_expression;
+			self .target_text += specr + translated_expression;
 			specr = cr;
 		}
 		else
 		{
 			if (syn)
 			{
-				self .target_text += syn_declarations +cr +indent_string +syn +translated_expression +";"; 
-				syn_list .forEach (function (item) { self .uids_already_in_equation_left .push (item); });
+				self .target_text +=
+					syn_declarations
+						+ cr + indent_string + syn + translated_expression + ";";
+
+				syn_list .forEach (item =>
+					self .uids_already_in_equation_left .push (item));
 			}
 
-			if (!syn && translated_expression !== target_str_uid) // <-- Exclude tautology ala 'var name = name;'
+			// For excluding tautology ala 'let name = name;'
+			if (!syn && translated_expression !== target_str_uid)
 			{
-				self .target_text += specr +indent_string + "var " +target_str_uid + " = " +translated_expression + ";";
+				self .target_text +=
+					specr + indent_string
+						+ "var " + target_str_uid
+							+ " = " + translated_expression + ";";
+
 				self .uids_already_in_equation_left .push (target_str_uid);
 				specr = cr;
 			}
@@ -455,7 +480,8 @@ as_proto .translate_to_js = function ()
 	}
 
 	if (current_stack .isloop)
-		current_stack .target_text = current_stack .aliastatement + current_stack .target_text;
+		current_stack .target_text =
+			current_stack .aliastatement + current_stack .target_text;
 }
 
 
@@ -524,9 +550,11 @@ as_proto .get_return_items =
 
 
 as_proto .get_return_statement = function ()
-  { return "return [ "
+{
+	return "return [ "
 		  + this .get_return_items () .join (", ")
-		  + " ];"; }
+		  + " ];";
+}
 
 
 as_proto .order_subexpressions = function ()
@@ -552,7 +580,10 @@ as_proto .order_subexpressions = function ()
 as_proto ._order_subexpressions = function (compex, item, position)
 {
 	var operator = compex .operator;
-	if ((operator === base_voc ["fv"]) && (compex !== item .compex)) return;
+
+	if ((operator === base_voc ["fv"]) &&
+			(compex !== item .compex))
+				return;
 
 	var _synonymous = synonymous (compex);
 
@@ -577,6 +608,7 @@ as_proto ._order_subexpressions = function (compex, item, position)
 	var is_stack_item = compex === item .compex;
 
 	var already_in_order = false;
+
 	/* current_stack .ordered_subexpressions .forEach (function (item)
 	  { if (item [0] === compex) { already_in_order = true; } }); */
 
@@ -596,13 +628,18 @@ as_proto ._order_subexpressions = function (compex, item, position)
 			compex .envariable ||
 				compex .get_target_str_uid () || new_str_uid ("subex");
 
-		var target_str_uid = compex .envariable || compex .get_target_str_uid ();
+		var target_str_uid = // ?
+			compex .envariable || compex .get_target_str_uid ();
+
 		this .return_items .push (compex);
 	}
 
-	if (operator .check_flag ("nowalk")) return;
+	if (operator .check_flag ("nowalk"))
+		return;
 
-	if (operator === base_voc ["leaf"]) return;
+	if (operator === base_voc ["leaf"])
+		return;
+
 	//if (operator === base_voc ["fv"]) { return; }
 
 	for (var i = compex .operands_offset;  i < compex .operand .length; i++)
@@ -779,27 +816,31 @@ function FsmlOperation (true_name,
 }
 
 
-FsmlOperation .prototype .check_flag = Abstract_stack .prototype .check_flag;
+FsmlOperation .prototype .check_flag =
+	Abstract_stack .prototype .check_flag;
 
 
 var base_voc = {
 //    "":    new FsmlOperation ("", [], _semantics, _target_translation_semantics),
 
 	"license":  new FsmlOperation ("license", [],  license_semantics),
-	"bb":   new FsmlOperation ("bb", [],  function () { fsmlog_type(cr +"Bye-bye. See you later") }),
+	"bb":		new FsmlOperation
+		("bb", [],  () => fsmlog_type(cr + "Bye-bye. See you later")),
 
-	"tojs": new FsmlOperation ("tojs", [], tojs_semantics),
-	".js": new FsmlOperation (".js", [], dot_js_semantics),
-	"eval": new FsmlOperation ("eval", [], eval_semantics),
-	".eval": new FsmlOperation (".eval", [], dot_eval_semantics),
-	"red": new FsmlOperation ("red", [], red_semantics),
+	"tojs":		new FsmlOperation ("tojs", [], tojs_semantics),
+	".js":		new FsmlOperation (".js", [], dot_js_semantics),
+	"eval":		new FsmlOperation ("eval", [], eval_semantics),
+	".eval":	new FsmlOperation (".eval", [], dot_eval_semantics),
+	"red":		new FsmlOperation ("red", [], red_semantics),
 
-	"leaf": new FsmlOperation ("leaf", ["nowalk"]),
+	"leaf":		new FsmlOperation ("leaf", ["nowalk"]),
 
 	// Why no_equation ?
-	// "quotation":   new FsmlOperation ("quotation", ["nowalk", "no_equation"], undefined, quotation_target_translation_semantics),
+	// "quotation": new FsmlOperation ("quotation", ["nowalk", "no_equation"],
+	//		undefined, quotation_target_translation_semantics),
 
-	"quotation":	new FsmlOperation ("quotation", ["nowalk"], undefined, quotation_target_translation_semantics),
+	"quotation":	new FsmlOperation ("quotation", ["nowalk"], undefined,
+		quotation_target_translation_semantics),
 
 	"fv":		new FsmlOperation ("fv", ["nowalk"]),
 
@@ -809,19 +850,31 @@ var base_voc = {
 	"]":		new FsmlOperation ("]", [], close_quotation_semantics),
 	"apply":	new FsmlOperation ("apply", [], apply_semantics),
 
-	"+":		new FsmlOperation ("+", [], undefined, plus_target_translation_semantics),
-	"-":		new FsmlOperation ("-", [], undefined, minus_target_translation_semantics),
-	"*":		new FsmlOperation ("*", [], undefined, mult_target_translation_semantics),
-	"/":		new FsmlOperation ("/", [], undefined, div_target_translation_semantics),
-	"pow":		new FsmlOperation ("pow", [], undefined, pow_target_translation_semantics),
+	"+":		new FsmlOperation
+		("+", [], undefined, plus_target_translation_semantics),
 
-	">":		new FsmlOperation (">", [], undefined, great_target_translation_semantics),
+	"-":		new FsmlOperation
+		("-", [], undefined, minus_target_translation_semantics),
+
+	"*":		new FsmlOperation
+		("*", [], undefined, mult_target_translation_semantics),
+
+	"/":		new FsmlOperation
+		("/", [], undefined, div_target_translation_semantics),
+
+	"pow":		new FsmlOperation
+		("pow", [], undefined, pow_target_translation_semantics),
+
+	">":		new FsmlOperation
+		(">", [], undefined, great_target_translation_semantics),
 
 	"!":		new FsmlOperation ("!", [], exclamark_semantics),
 	"@":		new FsmlOperation ("@", [], fetch_semantics),
 
 	"id":		new FsmlOperation ("id", [], id_semantics),
-	"identifier":	new FsmlOperation ("identifier", ["nowalk"], undefined, identifier_target_translation_semantics),
+
+	"identifier":	new FsmlOperation("identifier", ["nowalk"],
+		undefined, identifier_target_translation_semantics),
 
 	"ind":		new FsmlOperation ("ind", [], independent_semantics),
 	"i":		new FsmlOperation ("i",   [], independent_semantics),
@@ -834,18 +887,28 @@ var base_voc = {
 	"swap":		new FsmlOperation ("swap", [], swap_semantics),
 	"over":		new FsmlOperation ("over", [], over_semantics),
 
-	"list" :	new FsmlOperation ("list",  [], list_semantics, list_target_translation_semantics),
+	"list" :	new FsmlOperation
+		("list",  [], list_semantics, list_target_translation_semantics),
 
-	"if" :		new FsmlOperation ("if",  ["no_equation"], if_semantics, if_target_translation_semantics),
-	"if_supplier":		new FsmlOperation ("if_supplier", [], undefined, if_supplier_target_translation_semantics),
+	"if" :		new FsmlOperation
+		("if",  ["no_equation"], if_semantics, if_target_translation_semantics),
 
-	"while" :	new FsmlOperation ("while",  ["no_equation"], while_semantics, while_target_translation_semantics),
-	"while_supplier":	new FsmlOperation ("while_supplier", [], undefined, while_supplier_target_translation_semantics),
+	"if_supplier":		new FsmlOperation
+		("if_supplier", [], undefined, if_supplier_target_translation_semantics),
+
+	"while" :	new FsmlOperation
+		("while",  ["no_equation"],
+			while_semantics, while_target_translation_semantics),
+
+	"while_supplier":	new FsmlOperation
+		("while_supplier", [], undefined,
+			while_supplier_target_translation_semantics),
 
 	/*"until": new FsmlOperation ("until", [], until_semantics, until_target_translation_semantics),*/
 
-	"time":		new FsmlOperation ("time", ["nopure", "nowalk"], time_semantics, time_target_translation_semantics)
-
+	"time":		new FsmlOperation
+		("time", ["nopure", "nowalk"],
+			time_semantics, time_target_translation_semantics)
 
 //    "nopure": new FsmlOperation ("nopure", ["nopure"], nopure_semantics, nopure_target_translation_semantics)
 };
@@ -893,12 +956,14 @@ function eval_semantics ()
 	current_stack .translate_to_js (); // Upd jsource
 
 	const evalstr =
-		"(function (){ " +
-		(current_stack .get_target_text () +current_stack .get_return_statement ())
-			.replace (new RegExp (cr, 'g'), "")
-			.replace (/\&nbsp;/g,"") +
-		" })();";
+		"(function (){ "
+		+ (current_stack .get_target_text ()
+			+ current_stack .get_return_statement ())
+				.replace (new RegExp (cr, 'g'), "")
+				.replace (/\&nbsp;/g,"")
+		+ " })();";
 
+	// TODO: add try/catch
 	return current_stack .evalresult = eval (evalstr);
 }
 
@@ -990,7 +1055,8 @@ function Compex (operands, operator)
 	this .operator = operator;
 	this .reference_count = 1;
 	this .comparative_computing_order = current_stack .utmost_computing_order;
-	// this .comparative_computing_order = current_stack .get_next_computing_order ();
+	// this .comparative_computing_order = // ?
+	//		current_stack .get_next_computing_order ();
 	this .type     = "Expression";
 	this .shortype = "Exp";
 }
@@ -1004,14 +1070,15 @@ Compex .prototype .dereference = function ()
 {
 	if (this .reference_count === 0)
 	{
-		fsmlog_type ("OMG. You attempt to dereference compex with zero reference count");
+		fsmlog_type
+			("OMG. You attempt to dereference compex with zero reference count");
 		return;
 	}
 
-	this .reference_count -= 1;
+	// this .reference_count--; // -= 1;
 
-	if (this .reference_count === 0)
-		if (! this .frozen)
+	(--this .reference_count === 0) &&
+		! this .frozen &&
 			this .dereference_operands ();
 }
 
@@ -1134,7 +1201,8 @@ function compex_to_infix_str (compex)
 			var name_index = compex .operand [0];
 			var name = current_stack .predefined_argument_names [name_index];
 
-			if (current_stack .isloop && current_stack .uids_already_in_equation_left .includes (name))
+			if (current_stack .isloop &&
+				current_stack .uids_already_in_equation_left .includes (name))
 			{
 				current_stack .str_uids_to_rename .push (name);
 				return name +"_copy" ;
@@ -1152,7 +1220,8 @@ function compex_to_infix_str (compex)
 	{
 		var name = compex .get_target_str_uid ();
 
-		if (current_stack .isloop && current_stack .uids_already_in_equation_left .includes (name))
+		if (current_stack .isloop &&
+			current_stack .uids_already_in_equation_left .includes (name))
 		{
 			current_stack .str_uids_to_rename .push (name);
 			return name +"_copy";
@@ -1177,7 +1246,8 @@ function compex_to_infix_str (compex)
 		  { var name_index = compex .operand [0];
 			var name = current_stack .predefined_argument_names [name_index];            
 
-			if (current_stack .isloop && current_stack .uids_already_in_equation_left .includes (name))
+			if (current_stack .isloop &&
+				current_stack .uids_already_in_equation_left .includes (name))
 			  { current_stack .str_uids_to_rename .push (name);
 				return name +"_copy" ; }
 
@@ -1211,15 +1281,18 @@ function _substitute_variables (compex, p, n)
 		placeholder .check_flag ("subex") &&
 			substitutional .set_flag ("subex");
 
-		/* if (placeholder .comparative_computing_order &&  substitutional .comparative_computing_order)
-		  { s = "Warning: placeholder .comparative_computing_order &&  substitutional .comparative_computing_order";
+		/* if (placeholder .comparative_computing_order &&
+			substitutional .comparative_computing_order)
+		  { s = "Warning: placeholder .comparative_computing_order &&
+		  		substitutional .comparative_computing_order";
 			fsmlog_type (s); } */
 
 		if (placeholder .comparative_computing_order
 			&& !substitutional .comparative_computing_order)
 				substitutional .comparative_computing_order =
 					placeholder .comparative_computing_order;
-			/* s = "Warning: placeholder .comparative_computing_order &&  !substitutional .comparative_computing_order";
+			/* s = "Warning: placeholder .comparative_computing_order && 
+				!substitutional .comparative_computing_order";
 			fsmlog_type (s); */
 
 		if (!placeholder .comparative_computing_order
@@ -1238,7 +1311,10 @@ function _substitute_variables (compex, p, n)
 		return;
 	}
 
-	if (operator .check_flag ("nowalk") || operator === base_voc ["leaf"] || operator === base_voc ["quotation"]) return;
+	if (operator .check_flag ("nowalk") ||
+		operator === base_voc ["leaf"]
+			|| operator === base_voc ["quotation"])
+				return;
 
 	for (var i = compex .operands_offset;  i < compex .operand .length; i++)
 		_substitute_variables (compex .operand [i], compex, i);
@@ -1387,8 +1463,9 @@ function if_semantics ()
 		quotation_true .container .length ||
 			quotation_false .container .length;
 
-	var touched = Math .max (quotation_true  .tail_starts_from,
-							 quotation_false .tail_starts_from);
+	var touched =
+		Math .max (quotation_true .tail_starts_from,
+			quotation_false .tail_starts_from);
 
 	for (var i = 0; i < touched +3; i++)
 	{
@@ -1417,7 +1494,9 @@ function if_semantics ()
 		if_compex .item_names_count =
 			production_count;
 
-	var item_names = if_compex .item_names = []; // Firstly added correspond to top of stack etc
+	// Firstly added correspond to top of stack etc
+	var item_names = if_compex .item_names = [];
+
 	if_compex .another_item_names = [];
 
 	for (var i = 0; i < if_compex .item_names_count; i++)
@@ -1426,25 +1505,32 @@ function if_semantics ()
 		if_compex .another_item_names .push ([]);
 	}
 
-	const get_target_str_uid = () =>
-		this .operand [1] .item_names [this .operand [0]];
+	function get_target_str_uid ()
+	{
+		return this .operand [1] .item_names [this .operand [0]];
+	}
 
-	const set_target_str_uid = obtrusive_id =>
+	function set_target_str_uid (obtrusive_id)
+	{
 		this .operand [1] .item_names [this .operand [0]] = obtrusive_id;
+	}
 
-	const add_target_str_uid = obtrusive_id =>
+	function add_target_str_uid (obtrusive_id)
+	{
 		this .operand [1] .another_item_names [this .operand [0]]
 			.push (obtrusive_id);
-
+	}
+	
 	for (var i = 0; i < if_compex .reference_count; i++)
 	{
 		const item =
-			new_stack_item ("if_supplier", "if_supplier", undefined, "if_supplier");
+			new_stack_item
+				("if_supplier", "if_supplier", undefined, "if_supplier");
 
 		/* temp */ item .compex .dc = function () { return this; } /* temp */
 
 		item .compex .operands_offset = 1;
-		item .compex .operand [0] = production_count -i -1;
+		item .compex .operand [0] = production_count - i - 1;
 		item .compex .operand [1] = if_compex;
 		/* item .compex .set_flag ("subex"); */
 		item .compex .set_flag ("deliverer");
@@ -1467,7 +1553,8 @@ function if_target_translation_semantics (operand, if_object)
 		.forEach (item =>
 			item .operator === base_voc ["fv"] && (names_offset++));
 
-	/* var predefined_argument_names = current_stack .predefined_argument_names .slice (names_offset); */ /* Obsoleted ? */
+	/* var predefined_argument_names = current_stack .predefined_argument_names 
+		.slice (names_offset); */ /* Obsoleted ? */
 
 	var arg_names_for_quotation = operand .slice (3) .map
 		(function (item)
@@ -1536,10 +1623,11 @@ function if_target_translation_semantics (operand, if_object)
 
 	var indent_string =  bl .repeat (current_stack .indent_size);
 
-	var target_text = cr +indent_string +"if (" +condition_str_uid +") {"
-					 +nested_text
-					 +cr +indent_string +"}else{"
-					 +nested_text_else +" }" || "";
+	var target_text =
+		cr + indent_string + "if (" +condition_str_uid +")\n{"
+		+ nested_text
+		+ cr +indent_string + "} else {"
+		+nested_text_else + "\n}" || "";
 
 	return target_text; }
 
@@ -1563,7 +1651,8 @@ function while_semantics ()
 
 	if ( production_count !== touched + 1)
 	{
-		fsmlog_type ("OMG. Quotation size and amount of its argumens is not commensurable");
+		fsmlog_type
+			("OMG. Quotation size and amount of its argumens is not commensurable");
 		return;
 	}
 
@@ -1587,12 +1676,17 @@ function while_semantics ()
 	}
 
 	while_object .set_flag ("subex");
-	while_object .comparative_computing_order = current_stack .get_next_computing_order ();
+
+	while_object .comparative_computing_order =
+		current_stack .get_next_computing_order ();
+
 	while_object .operands_offset = 1;
 	while_object .reference_count = production_count -1;
 	while_object .item_names_count = production_count;
 
-	var item_names = while_object .item_names = []; // Firstly added correspond to top of stack etc
+	// Firstly added correspond to top of stack etc
+	var item_names = while_object .item_names = [];
+
 	while_object .another_item_names = [];
 
 	while_object .item_names [0] = new_str_uid ("cond");
@@ -1608,7 +1702,10 @@ function while_semantics ()
 		{ this .operand [1] .item_names [this .operand [0]] = obtrusive_id }
 
 	function add_target_str_uid (obtrusive_id)
-		{ this .operand [1] .another_item_names [this .operand [0]] .push (obtrusive_id) }
+	{
+		this .operand [1]
+			.another_item_names [this .operand [0]] .push (obtrusive_id)
+	}
 
 	for (var i = 0; i < while_object .reference_count; i++)
 	{
@@ -1639,12 +1736,14 @@ function while_target_translation_semantics (operand, while_object)
 {
 	var condition_str_uid = while_object .item_names [0];
 
-	var arg_names_for_quotation = operand .slice (1) .map
-		(function (item)
-		  { if (item .operator === base_voc ["fv"]) // FIXME
-			  { var t = current_stack .predefined_argument_names [item .operand [0]]; }
+	var arg_names_for_quotation = operand .slice (1) .map (function (item)
+		{
+			if (item .operator === base_voc ["fv"]) // FIXME
+				var t = current_stack
+					.predefined_argument_names [item .operand [0]];
 
-			return t || item .get_target_str_uid (); });
+			return t || item .get_target_str_uid ();
+		});
 
 	var target_text = "";
 	var new_indent = current_stack .indent_size +8;
@@ -1655,7 +1754,8 @@ function while_target_translation_semantics (operand, while_object)
 		_rename_str_uids,
 		rename_str_uids;
 
-	while_object .item_names = [while_object .item_names [0]] .concat (arg_names_for_quotation);
+	while_object .item_names =
+		[while_object .item_names [0]] .concat (arg_names_for_quotation);
 
 	function quot_to_js ()
 	{
@@ -1699,7 +1799,7 @@ function while_target_translation_semantics (operand, while_object)
 
 	var target_text = cr + indent_string + "do { "
 					 + nested_text
-					 + cr + indent_string + "} while (" + condition_str_uid + ");";
+					 + cr + cr + indent_string + "} while (" + condition_str_uid + ");";
 
 	return target_text;
 }
@@ -1774,58 +1874,77 @@ function wrap_by_parenthesis (str, suboperand, operand_name)
 
 
 function mult_target_translation_semantics (operand)
-  { var o0 = operand [0],
+{
+	// let [o0, o1] = operand;
+	var o0 = operand [0],
 		o1 = operand [1];
 
 	return "" +wrap_by_parenthesis (compex_to_infix_str (o0), o0, "*")
-		+" * " +wrap_by_parenthesis (compex_to_infix_str (o1), o1, "*"); }
+		+" * " +wrap_by_parenthesis (compex_to_infix_str (o1), o1, "*");
+}
 
 
 function div_target_translation_semantics (operand)
-  { var o0 = operand [0],
+{
+	var o0 = operand [0],
 		o1 = operand [1];
 
 	return "" +wrap_by_parenthesis (compex_to_infix_str (o0), o0, "/")
-		+" / " +wrap_by_parenthesis (compex_to_infix_str (o1), o1, "/"); }
+		+" / " +wrap_by_parenthesis (compex_to_infix_str (o1), o1, "/");
+}
 
 
 function pow_target_translation_semantics (operand)
-  { var o0 = operand [0],
+{
+	var o0 = operand [0],
 		o1 = operand [1];
 
 	return "" +wrap_by_parenthesis (compex_to_infix_str (o0), o0, "**")
-		+" ** " +wrap_by_parenthesis (compex_to_infix_str (o1), o1, "**"); }
+		+" ** " +wrap_by_parenthesis (compex_to_infix_str (o1), o1, "**");
+}
+
 
 function great_target_translation_semantics (operand)
-  { var o0 = operand [0],
+{
+	var o0 = operand [0],
 		o1 = operand [1];
 
 	return "" +wrap_by_parenthesis (compex_to_infix_str (o0), o0, ">")
-		+" > " +wrap_by_parenthesis (compex_to_infix_str (o1), o1, ">"); }
+		+" > " +wrap_by_parenthesis (compex_to_infix_str (o1), o1, ">");
+}
 
 
 function orderd_semantics () // <-- temporarily solution
-  { var as0 = current_stack .get (0);
-	as0 .compex .comparative_computing_order = current_stack .get_next_computing_order (); }
+{
+	var as0 = current_stack .get (0);
+	as0 .compex .comparative_computing_order =
+		current_stack .get_next_computing_order ();
+}
 
 
 function exclamark_semantics ()
-  { var as0 = current_stack .get (0);
+{
+	var as0 = current_stack .get (0);
 	var as1 = current_stack .get (1);
 	as1 .compex .envariable = as0 .compex .operand [0];
 	as0 .dereference ();
 	as1 .compex .set_flag ("subex"); // <-- Don't work !
-	as1 .compex .comparative_computing_order = current_stack .get_next_computing_order ();
+
+	as1 .compex .comparative_computing_order =
+		current_stack .get_next_computing_order ();
+
 //    current_stack .to_next_computing_order ();
 	var asi = new Abstract_stack_item ();
 	asi .compex = as1 .compex;
 	current_stack .assignments .push (asi);
 	current_stack .pop ();
-	current_stack .pop (); }
+	current_stack .pop ();
+}
 
 
 function fetch_semantics ()
-  { var as0 = current_stack .get (0);
+{
+	var as0 = current_stack .get (0);
 	var name = as0 .compex .operand [0];
 
 	as0 .dereference ();
@@ -1833,38 +1952,45 @@ function fetch_semantics ()
 
 	var item = new_stack_item ("leaf", "leaf", undefined, "leaf");
 	item .compex .operand [0] = name;
-	current_stack .push (item); }
+	current_stack .push (item);
+}
 
 
 function id_semantics (operand)
-  { var as0 = current_stack .get (0),
+{
+	var as0 = current_stack .get (0),
 		old_compex = as0 .compex,
 		value = old_compex .operand [0], //.toString ();
 		new_compex = new Compex ([value], base_voc ["identifier"]);
 
-		as0 .compex = new_compex; }
+		as0 .compex = new_compex;
+}
 
 
 function identifier_target_translation_semantics (operand)
-  { return operand [0] }
+	{ return operand [0] }
 
 
 function independent_semantics ()
-  { var as0 = current_stack .get (0);
+{
+	var as0 = current_stack .get (0);
 	var new_item = new Abstract_stack_item;
 	new_item .compex = as0 .compex;
 	new_item .compex .reference ();
 	as0 .dereference ();
-	current_stack .set (0, new_item); }
+	current_stack .set (0, new_item);
+}
 
 
 function deep_copy_semantics ()
-  { independent_semantics ();
+{
+	independent_semantics ();
 	var as0 = current_stack .get (0),
 		old_compex = as0 .compex;
 	as0 .compex = as0 .compex .dc ();
 
-	old_compex .dereference (); }
+	old_compex .dereference ();
+}
 
 
 function depth_semantics ()
@@ -1872,27 +1998,35 @@ function depth_semantics ()
 
 
 function drop_semantics ()
-  { var as0 = current_stack .get (0);
+{
+	var as0 = current_stack .get (0);
 	as0 .dereference ();
-	current_stack .pop (); }
+	current_stack .pop ();
+}
 
 
 function dup_semantics ()
-  { var as0 = current_stack .get (0);
+{
+	var as0 = current_stack .get (0);
 	as0 .reference ();
-	current_stack .push (as0); }
+	current_stack .push (as0);
+}
 
 
 function swap_semantics ()
-  { var as0 = current_stack .get (0);
+{
+	var as0 = current_stack .get (0);
 	current_stack .set (0, current_stack .get (1));
-	current_stack .set (1, as0); }
+	current_stack .set (1, as0);
+}
 
 
 function over_semantics ()
-  { var as1 = current_stack .get (1);
+{
+	var as1 = current_stack .get (1);
 	as1 .reference ();
-	current_stack .push (as1); }
+	current_stack .push (as1);
+}
 
 
 function license_semantics ()
@@ -1902,7 +2036,8 @@ function license_semantics ()
 // External environment functions
 
 
-function time_target_translation_semantics () { return "(+new Date ())" }
+function time_target_translation_semantics ()
+	{ return "(+new Date ())" }
 
 function time_semantics ()
 {
@@ -1914,6 +2049,19 @@ function time_semantics ()
 
 	current_stack .push (another_newdate_operation);
 	current_stack .set_flag ("no-pure-presented");
+}
+
+
+// Test lines
+
+function test (test)
+{
+	const tests =
+		{
+			'factorial': '12 dup [ 1 [ over * over 1 - ] while swap dp ] [ 0 ] if .eval'
+		}
+	
+	return tests [test];
 }
 
 
