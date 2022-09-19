@@ -4,8 +4,8 @@
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2022 Alexander (Shurko) Stadnichenko */
 /* License : BSD-2-Clause */
-/* Ver : 0.3.7 */
-/* Upd : 22.08.27 */
+/* Ver : 0.3.8 */
+/* Upd : 22.09.19 */
 
 /* eslint-disable */
 
@@ -276,13 +276,18 @@ as_proto .check_flag = function (flag)
 	{ return this .flags .includes (flag); }
 
 
-as_proto .extend_stack_if_necessary = function (index){
-	var c = this .container,
+as_proto .extend_stack_if_necessary = function (index)
+{
+	let c = this .container,
 		l = c.length;
-	if (index +1 > l){
-		var lack = index +1 - l;
+
+	if (index + 1 > l)
+	{
+		let lack = index + 1 - l;
 		this .container = this .materialize_tail (lack) .concat (c);
-		this .tail_starts_from += lack; } }
+		this .tail_starts_from += lack;
+	}
+}
 
 
 as_proto .materialize_tail = function (lack)
@@ -297,27 +302,57 @@ as_proto .materialize_tail = function (lack)
 }
 
 
-as_proto .get_quotation_item = function (){
-	var asi = new Abstract_stack_item ();
-	asi .compex .type = "Quotation";
-	asi .compex .shortype = "Q";
-	asi .compex .operand [0] = this;
-	asi .compex .operator = base_voc ["quotation"];
-	return asi; }
+as_proto .get_quotation_item =
+	function ()
+	{
+		const asi    = new Abstract_stack_item (),
+		      compex = asi .compex;
+		compex .type = "Quotation";
+		compex .shortype = "Q";
+		compex .operand [0] = this;
+		compex .operator = base_voc ["quotation"];
+		
+		return asi;
+	}
 
 
-as_proto .pop  = function (){
-	var index = 0;
+/* 
+// TODO: test this variant instead of the get_quotation_item () above
+
+as_proto .get_quotation_item =
+	(asi = undefined, compex = undefined) =>
+	(
+		asi    = new Abstract_stack_item (),
+		compex = asi .compex,
+		compex .type        = "Quotation",
+		compex .shortype    = "Q",
+		compex .operand [0] = asi,
+		compex .operator    = base_voc ["quotation"],
+
+		asi
+	);
+*/
+
+
+as_proto .pop  = function ()
+{
+	const index = 0;
 	this .extend_stack_if_necessary (index);
-	var c = this .container;
-	return c .pop (); }
+	const c = this .container;
+
+	return c .pop ();
+}
 
 
-as_proto .get  = function (index){
-	this .extend_stack_if_necessary (index);
-	var c = this .container;
-	var l = c .length;
-	return c [l -1 -index]; }
+as_proto .get =
+	function (index)
+	{
+		this .extend_stack_if_necessary (index);
+		// var c = this .container;
+		// var l = c .length;
+		// return c [l -1 -index];
+		return this .container .at (-index - 1);
+	}
 
 
 as_proto .set  = function (index, value){
@@ -831,6 +866,7 @@ var base_voc = {
 	".js":		new FsmlOperation (".js", [], dot_js_semantics),
 	"eval":		new FsmlOperation ("eval", [], eval_semantics),
 	".eval":	new FsmlOperation (".eval", [], dot_eval_semantics),
+	".test":	new FsmlOperation (".test", [], dot_test_semantics),
 	"red":		new FsmlOperation ("red", [], red_semantics),
 
 	"leaf":		new FsmlOperation ("leaf", ["nowalk"]),
@@ -976,6 +1012,34 @@ function dot_eval_semantics ()
 	evalresult_formatted =
 		"evaluated stack: [ "
 		+ evalresult_raw .toString () .replace (/,/g,", ") + " ]";
+
+	fsmlog_type (evalresult_formatted);
+}
+
+
+function dot_test_semantics ()
+{
+	const test_name =
+		current_stack .get (0) .compex .operand [0] || '',
+		test = tests (test_name) || '';
+
+	fsml_eval (test);
+
+	// TODO: DRY
+	const evalstr =
+		"(function (){ "
+		+ (current_stack .get_target_text ()
+			+ current_stack .get_return_statement ())
+				.replace (new RegExp (cr, 'g'), "")
+				.replace (/\&nbsp;/g,"")
+		+ " })();";
+
+	const evalresult =
+		current_stack .evalresult = eval (evalstr);
+
+	const evalresult_formatted =
+		"evaluated stack: [ "
+		+ evalresult .toString () .replace (/,/g,", ") + " ]";
 
 	fsmlog_type (evalresult_formatted);
 }
@@ -2054,15 +2118,14 @@ function time_semantics ()
 
 // Test lines
 
-function test (test)
-{
-	const tests =
-		{
-			'factorial': '12 dup [ 1 [ over * over 1 - ] while swap dp ] [ 0 ] if .eval'
-		}
-	
-	return tests [test];
-}
+const tests = name =>
+(
+	name ||= 'factorial',
+	({
+		'factorial': '12 dup [ 1 [ over * over 1 - ] while swap dp ] [ 0 ] if .eval'
+	})
+	[name] || "'\\ OMG! Bad name for test'"
+);
 
 
 export { get_fsml_instance };
