@@ -1893,8 +1893,8 @@ function trivial_binary_operation (operation_in_base_voc)
 		current_stack .to_next_computing_order (); // ! Palliative. FIXME
 
 		as1 .compex =
-			create_binary_compex (as1 .compex,
-				as0 .compex, operation_in_base_voc);
+			create_binary_compex (as0 .compex,
+				as1 .compex, operation_in_base_voc);
 
 		as0 .dereference ();
 	}
