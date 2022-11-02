@@ -4,12 +4,10 @@
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2022 Alexander (Shurko) Stadnichenko */
 /* License : BSD-2-Clause */
-/* Ver : 0.3.8 */
-/* Upd : 22.09.19 */
+/* Ver : 0.4.0 */
+/* Upd : 22.11.03 */
 
 /* eslint-disable */
-
-
 
 
 const cl = console .log;
