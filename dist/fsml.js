@@ -170,7 +170,7 @@ function deep_copy ()
 		new_object [i] = typeof dc === 'function' ? dc () : deep_copy .apply (item);
 	}
 
-	const { dc_postprocess } = this;
+	const dc_postprocess = this .dc_postprocess;
 	return dc_postprocess ? dc_postprocess (new_object) : new_object;
 }
 
@@ -188,7 +188,6 @@ function Abstract_stack (/* container */)
 	}
 
 	this .str_uid = new_str_uid ("quotation");
-
 	this .flags = [];
 
 	// When performed deep copy of quotation we need to reset cached identifiers
