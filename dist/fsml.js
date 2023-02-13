@@ -1,11 +1,11 @@
 
-/* FSML 0.3 */
+/* FSML 0.4 */
 
 /* FSML programming language compiler */
-/* Copyright (c) 2021, 2022 Alexander (Shurko) Stadnichenko */
+/* Copyright (c) 2021, 2023 Alexander (Shurko) Stadnichenko */
 /* License : BSD-2-Clause */
-/* Ver : 0.4.0 */
-/* Upd : 22.11.03 */
+/* Ver : 0.4.1 */
+/* Upd : 23.02.13 */
 
 /* eslint-disable */
 
@@ -31,7 +31,7 @@ let output_buffer = '';
  * @arg		{string} text	Append id to output
  * @return	{string}		Output buffer
  */
-const default_fsmlog_type = (text) =>
+const default_fsmlog_type = text =>
 	output_buffer += text;
 
 /* And set it as default until overriden */
@@ -71,7 +71,7 @@ const fsml_systate =
 	quote_default_type: '"'
 };
 
-var stacks_chain = [];
+const stacks_chain = [];
 
 
 /* Precedence of target language operations (JS) */
@@ -84,7 +84,7 @@ let js_operation_precedence =
 	];
 
 
-/* Now and below senseles short names like f, g, h for function factored out
+/* Now and below senseless short names like f, g, h for function factored out
    Immediately before it user */
 
 let f = (acc, arrg, idx) =>
@@ -144,9 +144,9 @@ const get_fsml_instance = () =>
 
 function deep_copy ()
 {
-	let new_object = new this .constructor ();
+	const new_object = new this .constructor ();
 
-	for (let i in this)
+	for (const i of Object.keys(this))
 		new_object [i] = this [i];
 
 	if (new_object .comparative_computing_order)
@@ -158,25 +158,20 @@ function deep_copy ()
 			current_stack .get_utmost_computing_order ();
 	}
 
-	let item;
+	for (const i in new_object)
+	{
+		const item = new_object [i];
+		const duplicable =
+			Array.isArray (item) || item && item .constructor === Object .constructor;
 
-	for (const i in new_object, (item = new_object [i]))
+		if (!duplicable) continue;
 
-		if (item === undefined || item === null)
-			continue;
+		const dc = item .dc;
+		new_object [i] = typeof dc === 'function' ? dc () : deep_copy .apply (item);
+	}
 
-		if (item && item .dc)
-			new_object [i] = item .dc ();
-
-		else
-			if (item && item .constructor === [] .constructor
-				|| item .constructor === {} .constructor)
-					new_object [i] = deep_copy .apply (item);
-
-	if (this .dc_postprocess)
-		new_object = this .dc_postprocess (new_object);
-
-	return new_object;
+	const { dc_postprocess } = this;
+	return dc_postprocess ? dc_postprocess (new_object) : new_object;
 }
 
 
@@ -346,10 +341,10 @@ as_proto .get =
 	function (index)
 	{
 		this .extend_stack_if_necessary (index);
-		// var c = this .container;
-		// var l = c .length;
-		// return c [l -1 -index];
-		return this .container .at (-index - 1);
+		var c = this .container;
+		var l = c .length;
+		return c [l -1 -index];
+		// return this .container .at (-index - 1);
 	}
 
 
@@ -1438,24 +1433,18 @@ function apply_semantics ()
 
 function list_semantics ()
 {
-	var as0 = current_stack .get (0),
-	quotation = as0 .compex .dc (),
-	asi = new_stack_item ("List", "Lst", quotation, "list");
+	const as0       = current_stack .get (0),
+		  quotation = as0 .compex .dc (),
+		  asi       = new_stack_item ("List", "Lst", quotation, "list");
 
-	quotation .dc_postprocess &&
-		quotation .dc_postprocess (quotation);
+	// quotation .dc_postprocess &&
+	// 	quotation .dc_postprocess (quotation);
 
-//		quotation .comparative_computing_order =
-//			current_stack .get_next_computing_order ();
-//		asi .compex .comparative_computing_order =
-//			current_stack .get_next_computing_order ();
-
+	quotation ?. dc_postprocess (quotation);
 	quotation .set_flag ("no_equation");
-
 	quotation .operand [1] = {};
 	quotation .set_flag ("subex");
 	asi .compex .str_uid = new_str_uid ("Lst");
-
 	quotation .reference (); // FIXME
 	as0 .dereference ();
 
@@ -1464,11 +1453,6 @@ function list_semantics ()
 
 	asi .compex .comparative_computing_order =
 		current_stack .get_next_computing_order ();
-
-	/* quotation .freeze ();
-	as0 .dereference ();
-	quotation .reference ();
-	quotation .unfreeze (); */
 
 	current_stack .set (0, asi);
 }
@@ -1486,7 +1470,7 @@ function list_target_translation_semantics (operand, parent)
 	// current_stack .actual_target_names = false;
 	current_stack .translate_to_js ();
 
-	var text =
+	const text =
 		"[ "
 		+ current_stack .get_return_items () .slice () .reverse () .join (", ")
 		+ " ]";

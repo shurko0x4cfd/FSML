@@ -1,27 +1,29 @@
 {
-  "name": "fsmlang",
-  "type": "module",
-  "version": "0.4.0",
-  "description": "FSML - homoiconic postfix concatenative programming language. JS implementation",
-  "main": "dist/fsml.js",
-  "scripts": {
-    "test": "echo \"No test presented yet\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/shurko0x4cfd/FSML.git"
-  },
-  "keywords": [
-    "homoiconicity",
-    "postfix",
-    "concatenative",
-    "stack",
-    "transpilation"
-  ],
-  "author": "Alexander (Shurko) Stadnichenko",
-  "license": "BSD-2-Clause",
-  "bugs": {
-    "url": "https://github.com/shurko0x4cfd/FSML/issues"
-  },
-  "homepage": "https://github.com/shurko0x4cfd/FSML#readme"
+	"name": "fsmlang",
+	"type": "module",
+	"version": "0.4.1",
+	"description": "FSML - homoiconic postfix concatenative programming language. JS implementation",
+	"main": "dist/fsml.js",
+	"scripts": {
+		"test": "echo \"No test presented yet\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/shurko0x4cfd/FSML.git"
+	},
+	"keywords": [
+		"homoiconicity",
+		"postfix",
+		"concatenative",
+		"stack",
+		"transpilation",
+		"poinfree",
+		"tacit"
+	],
+	"author": "Alexander (Shurko) Stadnichenko",
+	"license": "BSD-2-Clause",
+	"bugs": {
+		"url": "https://github.com/shurko0x4cfd/FSML/issues"
+	},
+	"homepage": "https://github.com/shurko0x4cfd/FSML#readme"
 }
