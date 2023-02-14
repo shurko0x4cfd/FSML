@@ -722,7 +722,7 @@ function synonymous (compex)
 
 function fsml_eval (fsml_in)
 {
-	try {
+	// try {
 		fsml_in = alt_split (fsml_in);
 
 		for (let i in fsml_in)
@@ -733,12 +733,12 @@ function fsml_eval (fsml_in)
 
 		return buffer_output || undefined;
 
-	} catch (exc) {
-		exc = exc .toString ();
+	// } catch (exc) {
+	// 	exc = exc .toString ();
 
-		fsmlog_type (`${cr}${cr}Environment exception: ${cr}${cr}`)
-		fsmlog_type (exc);
-	}
+	// 	fsmlog_type (`${cr}${cr}Environment exception: ${cr}${cr}`)
+	// 	fsmlog_type (exc);
+	// }
 }
 
 
@@ -1252,10 +1252,10 @@ function compex_to_infix_str (compex)
 
 	if (operator === base_voc ["fv"])
 	{
-		if (current_stack .predefined_argument_names .length > 0)
+		if (current_stack .predefined_argument_names .length)
 		{
-			var name_index = compex .operand [0];
-			var name = current_stack .predefined_argument_names [name_index];
+			const name_index = compex .operand [0];
+			const name = current_stack .predefined_argument_names [name_index];
 
 			if (current_stack .isloop &&
 				current_stack .uids_already_in_equation_left .includes (name))
@@ -1296,20 +1296,6 @@ function compex_to_infix_str (compex)
 
 		return leaf;
 	}
-
-	/* if (operator === base_voc ["fv"])
-	  { if (current_stack .predefined_argument_names .length > 0)
-		  { var name_index = compex .operand [0];
-			var name = current_stack .predefined_argument_names [name_index];            
-
-			if (current_stack .isloop &&
-				current_stack .uids_already_in_equation_left .includes (name))
-			  { current_stack .str_uids_to_rename .push (name);
-				return name +"_copy" ; }
-
-			return name; }
-		else
-			{ return "fv_" +compex .operand [0]; } } */
 
 	return operator .translate_to_target (compex .operand, compex);
 }
@@ -1688,11 +1674,10 @@ function if_supplier_target_translation_semantics (operand)
 
 function while_semantics ()
 {
-	var while_object = new Compex ([], base_voc ["while"]);
-
-	var quotation  = current_stack .get (0) .compex .operand [0];
-	var production_count = quotation .container .length;
-	var touched = quotation .tail_starts_from;
+	const while_object     = new Compex ([], base_voc ["while"]);
+	const quotation        = current_stack .get (0) .compex .operand [0];
+	const production_count = quotation .container .length;
+	const touched          = quotation .tail_starts_from;
 
 	if ( production_count !== touched + 1)
 	{
@@ -1703,17 +1688,16 @@ function while_semantics ()
 
 	quotation .isloop = true;
 
-	for (var i = 0; i < touched +1; i++)
+	for (let i = 0; i < touched +1; i++)
 	{
 		independent_semantics ();
 
-		var item = current_stack .pop ();
+		const item = current_stack .pop ();
 		
 		item .compex .set_flag ("subex");
 
-		item .compex .comparative_computing_order =
-			item .compex .comparative_computing_order ||
-				current_stack .get_next_computing_order ();
+		item .compex .comparative_computing_order ||=
+			current_stack .get_next_computing_order ();
 
 		// current_stack .to_next_computing_order (); // <-- Useless
 
@@ -1874,8 +1858,8 @@ function trivial_binary_operation (operation_in_base_voc)
 		current_stack .to_next_computing_order (); // ! Palliative. FIXME
 
 		as1 .compex =
-			create_binary_compex (as0 .compex,
-				as1 .compex, operation_in_base_voc);
+			create_binary_compex (as1 .compex,
+				as0 .compex, operation_in_base_voc);
 
 		as0 .dereference ();
 	}
