@@ -1,7 +1,7 @@
 {
 	"name": "fsmlang",
 	"type": "module",
-	"version": "0.4.1",
+	"version": "0.4.2",
 	"description": "FSML - homoiconic postfix concatenative programming language. JS implementation",
 	"main": "dist/fsml.js",
 	"scripts": {
