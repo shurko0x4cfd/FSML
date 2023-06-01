@@ -1,13 +1,22 @@
 
-/* FSML 0.4 */
+/* FSML 0.4.5 */
 
 /* FSML programming language compiler */
-/* Copyright (c) 2021, 2023 Alexander (Shurko) Stadnichenko */
+/* Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichenko */
 /* License : BSD-2-Clause */
-/* Ver : 0.4.1 */
-/* Upd : 23.02.13 */
+/* Upd : 23.06.01 */
 
-/* eslint-disable */
+
+/** Temp support to Firefox. Will be removed at time FF implement toReversed() */
+!Array.prototype.toReversed &&
+	Object.defineProperty(
+		Array.prototype,
+		'toReversed',
+		{
+			value: function () { return this .slice () .reverse () },
+			enumerable: false,
+		}
+	);
 
 
 const cl = console .log;
@@ -40,7 +49,7 @@ let fsmlog_type = default_fsmlog_type;
 
 let BSD_2_Clause_license =
 	` \
-	Copyright (c) 2021, 2022 Alexander (Shurko) Stadnichenko${cr}\
+	Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichenko${cr}\
 	${cr}\
 	All rights reserved. Redistribution and use in  source and binary forms, with or${cr}\
 	without modification, are  permitted provided that the  following conditions are${cr}\
@@ -103,7 +112,7 @@ js_operation_precedence .leaf = 100;
  * @arg		{string} prefix String prefix for uid like "subex" or "cond"
  * @return	{string}		Unique string identifier
  */
-const new_str_uid = 
+const new_str_uid =
 	((uids = {}) =>
 		prefix =>
 			(prefix in uids ^ true
@@ -303,12 +312,12 @@ as_proto .get_quotation_item =
 		compex .shortype = "Q";
 		compex .operand [0] = this;
 		compex .operator = base_voc ["quotation"];
-		
+
 		return asi;
 	}
 
 
-/* 
+/*
 // TODO: test this variant instead of the get_quotation_item () above
 
 as_proto .get_quotation_item =
@@ -365,7 +374,7 @@ as_proto .type_stack = function ()
 
 	this .order_subexpressions ();
 
-	const reversed_stack = (current_stack .items_digest ()) .reverse (),
+	const reversed_stack = current_stack .container .toReversed (),
 		fsml_out = [];
 
 	reversed_stack .forEach (function (item)
@@ -380,9 +389,9 @@ as_proto .type_stack = function ()
 
 as_proto .translate_to_js = function ()
 {
-	var self = this;
-	var indent_string =  bl .repeat (current_stack .indent_size);
-	fsml_systate .need_full_substitution = false;
+	const self = this;
+	const indent_string =  bl .repeat (current_stack .indent_size);
+	fsml_systate .need_full_substitution = false; // ! Bad place
 	this .uids_already_in_equation_left = [];
 	this .str_uids_to_rename = [];
 
@@ -391,7 +400,7 @@ as_proto .translate_to_js = function ()
 	this .item_names .forEach ((item, index) =>
 		{
 			const element = self .container [index] .compex;
-			
+
 			element .target_str_uid = item;
 
 			element .check_flag ("deliverer") &&
@@ -448,7 +457,7 @@ as_proto .translate_to_js = function ()
 
 			if (syn_item && (syn_item === translated_expression))
 				syn = ""; // "/* Tautology '" +syn_item +" = " +syn_item +"' excluded */"; } }
-		} 
+		}
 
 		let target_str_uid = compex .get_target_str_uid ();
 
@@ -520,7 +529,7 @@ function translate_empty_quotation (indent_size, item_names, another_item_names)
 	let comma = "", equation = "";
 
 	var indent_string =  bl .repeat (indent_size);
-	
+
 	item_names = item_names || [];
 
 	item_names .forEach (function (item, index)
@@ -572,7 +581,7 @@ as_proto .get_return_items =
 	function ()
 	{
 		return this .return_items .map (compex =>
-			compex .envariable || compex .get_target_str_uid ());
+			compex .get_target_str_uid ());
 	}
 
 
@@ -586,13 +595,12 @@ as_proto .get_return_statement = function ()
 
 as_proto .order_subexpressions = function ()
 {
-	var self = this;
+	const self = this;
 	this .ordered_subexpressions = [];
 	this .reset_pseudo_order ();
-	// this .return_items_old = [];
 	this .return_items = [];
 
-	var stack = current_stack .items_digest ();
+	const stack = current_stack .items_digest ();
 
 	stack .forEach ((item, position) =>
 		self ._order_subexpressions (item .compex, item, position));
@@ -606,15 +614,15 @@ as_proto .order_subexpressions = function ()
 
 as_proto ._order_subexpressions = function (compex, item, position)
 {
-	var operator = compex .operator;
+	const operator = compex .operator;
 
 	if ((operator === base_voc ["fv"]) &&
 			(compex !== item .compex))
 				return;
 
-	var _synonymous = synonymous (compex);
+	const _synonymous = synonymous (compex);
 
-	var like_subex =
+	const like_subex =
 		compex .reference_count > 1 ||
 			compex .check_flag ("subex") || operator .check_flag ("nopure");
 
@@ -623,23 +631,19 @@ as_proto ._order_subexpressions = function (compex, item, position)
 		var str_uid;
 
 		if (this .actual_target_names)
-			str_uid = compex .envariable || compex .get_target_str_uid () || new_str_uid ("subex");
+			str_uid = compex .get_target_str_uid ();
 		else
-			str_uid = compex .envariable || new_str_uid ("subex");
+			str_uid = new_str_uid ("subex");
 
 		append_to_order (compex .comparative_computing_order,
 			compex, _synonymous);
 
-		compex .target_str_uid = str_uid; }
+		compex .target_str_uid = str_uid;
+	}
 
-	var is_stack_item = compex === item .compex;
+	const is_stack_item = compex === item .compex;
 
-	var already_in_order = false;
-
-	/* current_stack .ordered_subexpressions .forEach (function (item)
-	  { if (item [0] === compex) { already_in_order = true; } }); */
-
-	if (is_stack_item && !like_subex && !already_in_order)
+	if (is_stack_item && !like_subex)
 	{
 		if (compex .comparative_computing_order !== undefined)
 			var order = compex .comparative_computing_order;
@@ -651,13 +655,7 @@ as_proto ._order_subexpressions = function (compex, item, position)
 
 	if (is_stack_item)
 	{
-		compex .target_str_uid =
-			compex .envariable ||
-				compex .get_target_str_uid () || new_str_uid ("subex");
-
-		var target_str_uid = // ?
-			compex .envariable || compex .get_target_str_uid ();
-
+		compex .get_target_str_uid ();
 		this .return_items .push (compex);
 	}
 
@@ -671,7 +669,7 @@ as_proto ._order_subexpressions = function (compex, item, position)
 
 	for (var i = compex .operands_offset;  i < compex .operand .length; i++)
 	{
-		var operand = compex .operand [i];
+		const operand = compex .operand [i];
 		operand && this ._order_subexpressions (operand, item, position);
 	}
 }
@@ -679,14 +677,14 @@ as_proto ._order_subexpressions = function (compex, item, position)
 
 function append_to_order (order, compex, _synonymous)
 {
-	var ordered_subexpressions = current_stack .ordered_subexpressions;
+	const ordered_subexpressions = current_stack .ordered_subexpressions;
 
 	if (! ordered_subexpressions [order])
 		ordered_subexpressions [order] = [];
 
-	var subexpressions = ordered_subexpressions [order];
+	const subexpressions = ordered_subexpressions [order];
 
-	for (var index in subexpressions)
+	for (const index in subexpressions)
 		if (subexpressions [index][0] === compex) return;
 
 	ordered_subexpressions [order] .push ([compex, _synonymous]);
@@ -695,34 +693,35 @@ function append_to_order (order, compex, _synonymous)
 
 function synonymous (compex)
 {
-	var envariable = compex .envariable && [ compex .envariable ];
-	var _synonymous = envariable || [];
-	var stack_items = current_stack .items_digest ();
+	let synonymous = [];
+	const stack_items = current_stack .items_digest ();
+
+	if (current_stack .item_names .length === 0)
+		return synonymous;
 
 	stack_items .forEach (function (item, index)
 		{
-			if (current_stack .item_names .length > 0
-				&& stack_items [index] .compex === compex )
+			if (stack_items [index] .compex === compex )
 			{
-				_synonymous =
-					_synonymous .concat (current_stack
+				synonymous =
+					synonymous .concat (current_stack
 						.another_item_names [index]);
 
-				var name = current_stack .item_names [index];
+				const name = current_stack .item_names [index];
 
-				if (! name) return;
+				if (!name) return;
 
-				_synonymous .push (name);
+				synonymous .push (name);
 			}
 		});
 
-	return _synonymous;
+	return synonymous;
 }
 
 
 function fsml_eval (fsml_in)
 {
-	// try {
+	try {
 		fsml_in = alt_split (fsml_in);
 
 		for (let i in fsml_in)
@@ -733,12 +732,12 @@ function fsml_eval (fsml_in)
 
 		return buffer_output || undefined;
 
-	// } catch (exc) {
-	// 	exc = exc .toString ();
+	} catch (exc) {
+		exc = exc .toString ();
 
-	// 	fsmlog_type (`${cr}${cr}Environment exception: ${cr}${cr}`)
-	// 	fsmlog_type (exc);
-	// }
+		fsmlog_type (`${cr}${cr}Environment exception: ${cr}${cr}`)
+		fsmlog_type (exc);
+	}
 }
 
 
@@ -784,9 +783,9 @@ function alt_split (s)  // <-- Draft
 		}
 
 		_substring = s .substring (0, last);
-		s = s .substring (last +1);        
+		s = s .substring (last +1);
 		result .push ([_substring, quotype]);
-	
+
 	} while (s .length);
 
 	return result;
@@ -896,7 +895,13 @@ var base_voc = {
 	">":		new FsmlOperation
 		(">", [], undefined, great_target_translation_semantics),
 
-	"!":		new FsmlOperation ("!", [], exclamark_semantics),
+	"!": new FsmlOperation
+		(
+			"!", [],
+			exclamark_semantics,
+			exclamark_target_translation_semantics
+		),
+
 	"@":		new FsmlOperation ("@", [], fetch_semantics),
 
 	"id":		new FsmlOperation ("id", [], id_semantics),
@@ -915,8 +920,22 @@ var base_voc = {
 	"swap":		new FsmlOperation ("swap", [], swap_semantics),
 	"over":		new FsmlOperation ("over", [], over_semantics),
 
-	"list" :	new FsmlOperation
-		("list",  [], list_semantics, list_target_translation_semantics),
+	// Bugged
+	// "q>l" :	new FsmlOperation
+	// (
+	// 	"quotolist",
+	// 	[],
+	// 	to_list_semantics,
+	// 	to_list_target_translation_semantics
+	// ),
+
+	"list":		new FsmlOperation
+	(
+		'list',
+		[],
+		list_semantics,
+		list_target_translation_semantics
+	),
 
 	"if" :		new FsmlOperation
 		("if",  ["no_equation"], if_semantics, if_target_translation_semantics),
@@ -933,6 +952,11 @@ var base_voc = {
 			while_supplier_target_translation_semantics),
 
 	/*"until": new FsmlOperation ("until", [], until_semantics, until_target_translation_semantics),*/
+
+	// push_target_translation_semantics
+	"push":		new FsmlOperation
+		("push", ["nopure",],
+			push_semantics, push_target_translation_semantics),
 
 	"time":		new FsmlOperation
 		("time", ["nopure", "nowalk"],
@@ -1002,7 +1026,7 @@ function dot_eval_semantics ()
 
 	// If result is str with ',' ?
 	evalresult_formatted =
-		"evaluated stack: [ "
+		cr + cr + "evaluated stack: [ "
 		+ evalresult_raw .toString () .replace (/,/g,", ") + " ]";
 
 	fsmlog_type (evalresult_formatted);
@@ -1012,7 +1036,7 @@ function dot_eval_semantics ()
 function dot_test_semantics ()
 {
 	const test_name =
-		current_stack .get (0) .compex .operand [0] || '',
+		current_stack .pop () .compex .operand [0] || '',
 		test = tests (test_name) || '';
 
 	fsml_eval (test);
@@ -1096,6 +1120,7 @@ function Compex (operands, operator)
 
 	this .dc_postprocess = function (obj)
 	{
+		// if str_uid is charact of rels must be the same for Q
 		obj .str_uid = new_str_uid ("compex");
 		obj .target_str_uid = new_str_uid ("subex");
 
@@ -1104,6 +1129,7 @@ function Compex (operands, operator)
 
 	this .frozen = false;
 	this .flags = [];
+	// immaname
 	this .str_uid = new_str_uid ("compex");
 	this .target_str_uid = undefined;
 	this .operand  = operands;
@@ -1182,7 +1208,7 @@ Compex .prototype .reference_no_subex = function ()
 
 
 Compex .prototype .get_target_str_uid =
-	function () { return this .target_str_uid }
+	function () { return this .target_str_uid ||= new_str_uid ("subex") }
 
 
 function create_binary_compex (operand_0, operand_1, operator)
@@ -1210,8 +1236,7 @@ Abstract_stack_item .prototype .dereference = function ()
 {
 	if (this .reference_count === 0)
 	{
-		fsmlog_type ("OMG. You attempt to dereference stack item with zero \
-			reference count");
+		fsmlog_type ("OMG. You attempt to dereference stack item with zero reference count");
 		return;
 	}
 
@@ -1246,7 +1271,7 @@ function new_fv_item (fv_index)
 	{ return new_stack_item ("Free variable", "Fv", fv_index, "fv") }
 
 
-function compex_to_infix_str (compex)
+function compex_to_infix_str (compex, opts = {})
 {
 	var operator = compex .operator;
 
@@ -1297,7 +1322,7 @@ function compex_to_infix_str (compex)
 		return leaf;
 	}
 
-	return operator .translate_to_target (compex .operand, compex);
+	return operator .translate_to_target (compex .operand, compex, opts);
 }
 
 
@@ -1333,7 +1358,7 @@ function _substitute_variables (compex, p, n)
 			&& !substitutional .comparative_computing_order)
 				substitutional .comparative_computing_order =
 					placeholder .comparative_computing_order;
-			/* s = "Warning: placeholder .comparative_computing_order && 
+			/* s = "Warning: placeholder .comparative_computing_order &&
 				!substitutional .comparative_computing_order";
 			fsmlog_type (s); */
 
@@ -1349,6 +1374,9 @@ function _substitute_variables (compex, p, n)
 
 		if (new_utmost_order < p .operand [n] .comparative_computing_order)
 			new_utmost_order = p .operand [n] .comparative_computing_order;
+
+		// new_utmost_order =
+		//		Math.max (new_utmost_order, p .operand [n] .comparative_computing_order);
 
 		return;
 	}
@@ -1378,35 +1406,33 @@ let new_utmost_order = 0;
 
 function apply_semantics ()
 {
-	var as0 = current_stack .pop ();
-	var quotation = as0 .compex .operand [0];
-	var items = quotation .items_digest ();
-	var touched = quotation .tail_starts_from; 
+	const as0		= current_stack .pop ();
+	const quotation	= as0 .compex .operand [0];
+	const touched	= quotation .tail_starts_from;
+	const quotation_items = quotation .items_digest ();
 
 	new_utmost_order = 0; // <-- nonlocal
 
 	touched > 0 &&
 		current_stack .extend_stack_if_necessary (touched - 1);
 
-	var head =
-		current_stack .items_digest ()
-			.reverse () .slice (0, touched) .reverse ();
+	const current_items	= current_stack .items_digest ();
+	const current_num   = current_items .length;
 
-	var tail =
-		current_stack .items_digest ()
-			.reverse () .slice (touched) .reverse ();
+	const head = current_items .slice (current_num - touched);
+	const tail = current_items .slice (0, current_num - touched);
 
-	var assignments = quotation .assignments .slice ();
+	const assignments = quotation .assignments .slice ();
 
-	for (var i in items)
-		substitute_variables (items [i]);
+	for (const i in quotation_items)
+		substitute_variables (quotation_items [i]);
 
-	for (var i in assignments)
+	for (const i in assignments)
 		substitute_variables (assignments [i]);
 
 	head .forEach (item => item .dereference ());
 
-	var  new_container = tail .concat (items);
+	const  new_container = tail .concat (quotation_items);
 	current_stack .container = new_container;
 
 	current_stack .assignments =
@@ -1416,11 +1442,32 @@ function apply_semantics ()
 }
 
 
+/** New empty JS-like list/array */
 function list_semantics ()
+{
+	// const expression =  new Compex ([], base_voc ["list"]);
+	const asi = new_stack_item ("List", "lst", undefined, "list");
+	asi .compex .set_flag ('subex');
+	current_stack .push (asi);
+}
+
+
+// Empty JS list/array
+function list_target_translation_semantics (opd, compex, opts)
+{
+	if (opts .requested === 'target uid')
+		return compex .get_target_str_uid ();
+	else
+		return '[]';
+}
+
+
+/** Limited convertion quotation to JS list. Obsoleted */
+function to_list_semantics ()
 {
 	const as0       = current_stack .get (0),
 		  quotation = as0 .compex .dc (),
-		  asi       = new_stack_item ("List", "Lst", quotation, "list");
+		  asi       = new_stack_item ("List", "Lst", quotation, "quotolist");
 
 	// quotation .dc_postprocess &&
 	// 	quotation .dc_postprocess (quotation);
@@ -1429,7 +1476,7 @@ function list_semantics ()
 	quotation .set_flag ("no_equation");
 	quotation .operand [1] = {};
 	quotation .set_flag ("subex");
-	asi .compex .str_uid = new_str_uid ("Lst");
+	asi .compex .str_uid = new_str_uid ("list");
 	quotation .reference (); // FIXME
 	as0 .dereference ();
 
@@ -1443,7 +1490,8 @@ function list_semantics ()
 }
 
 
-function list_target_translation_semantics (operand, parent)
+/** Limited convertion quotation to JS list. Obsoleted */
+function to_list_target_translation_semantics (operand, parent)
 {
 	if (fsml_systate .need_full_substitution)
 		return '"[ ' + parent .str_uid + ' ]"';
@@ -1452,12 +1500,11 @@ function list_target_translation_semantics (operand, parent)
 
 	stacks_chain .push (current_stack);
 	current_stack = quotation;
-	// current_stack .actual_target_names = false;
 	current_stack .translate_to_js ();
 
 	const text =
 		"[ "
-		+ current_stack .get_return_items () .slice () .reverse () .join (", ")
+		+ current_stack .get_return_items () .toReversed () .join (", ")
 		+ " ]";
 
 	current_stack = stacks_chain .pop ();
@@ -1551,7 +1598,7 @@ function if_semantics ()
 		this .operand [1] .another_item_names [this .operand [0]]
 			.push (obtrusive_id);
 	}
-	
+
 	for (var i = 0; i < if_compex .reference_count; i++)
 	{
 		const item =
@@ -1570,7 +1617,7 @@ function if_semantics ()
 		item .compex .set_target_str_uid = set_target_str_uid;
 		item .compex .add_target_str_uid = add_target_str_uid;
 
-		current_stack .push (item); 
+		current_stack .push (item);
 	}
 }
 
@@ -1584,7 +1631,7 @@ function if_target_translation_semantics (operand, if_object)
 		.forEach (item =>
 			item .operator === base_voc ["fv"] && (names_offset++));
 
-	/* var predefined_argument_names = current_stack .predefined_argument_names 
+	/* var predefined_argument_names = current_stack .predefined_argument_names
 		.slice (names_offset); */ /* Obsoleted ? */
 
 	var arg_names_for_quotation = operand .slice (3) .map
@@ -1617,10 +1664,10 @@ function if_target_translation_semantics (operand, if_object)
 			current_stack = quot;
 
 			current_stack .item_names =
-				if_object .item_names .slice () .reverse ();
+				if_object .item_names .toReversed ();
 
 			current_stack .another_item_names =
-				if_object .another_item_names .slice () .reverse ();
+				if_object .another_item_names .toReversed ();
 
 			current_stack .predefined_argument_names = arg_names_for_quotation;
 			current_stack .indent_size = new_indent;
@@ -1635,8 +1682,8 @@ function if_target_translation_semantics (operand, if_object)
 		} else {
 			_nested_text =
 				translate_empty_quotation (new_indent,
-					if_object .item_names .slice () .reverse (),
-					if_object .another_item_names .slice () .reverse ());
+					if_object .item_names .toReversed (),
+					if_object .another_item_names .toReversed ());
 		}
 	}
 
@@ -1693,7 +1740,7 @@ function while_semantics ()
 		independent_semantics ();
 
 		const item = current_stack .pop ();
-		
+
 		item .compex .set_flag ("subex");
 
 		item .compex .comparative_computing_order ||=
@@ -1721,7 +1768,6 @@ function while_semantics ()
 	while_object .item_names [0] = new_str_uid ("cond");
 
 	for (var i = 0; i < while_object .item_names_count; i++)
-		/*while_object .item_names .push (new_str_uid ("subex"));*/
 		while_object .another_item_names .push ([]);
 
 	function get_target_str_uid ()
@@ -1794,10 +1840,10 @@ function while_target_translation_semantics (operand, while_object)
 			current_stack = quot;
 
 			current_stack .item_names =
-				while_object .item_names .slice () .reverse ();
+				while_object .item_names .toReversed ();
 
 			current_stack .another_item_names =
-				while_object .another_item_names .slice () .reverse ();
+				while_object .another_item_names .toReversed ();
 
 			current_stack .predefined_argument_names = arg_names_for_quotation;
 			current_stack .indent_size = new_indent;
@@ -1814,8 +1860,8 @@ function while_target_translation_semantics (operand, while_object)
 		{
 			_nested_text =
 				translate_empty_quotation (new_indent,
-					while_object .item_names .slice () .reverse (),
-					while_object .another_item_names .slice () .reverse ());
+					while_object .item_names .toReversed (),
+					while_object .another_item_names .toReversed ());
 		}
 	}
 
@@ -1951,23 +1997,46 @@ function orderd_semantics () // <-- temporarily solution
 }
 
 
+const idx_var_name = 1;
+const idx_assigned_expression = 0;
+
+
 function exclamark_semantics ()
 {
-	var as0 = current_stack .get (0);
-	var as1 = current_stack .get (1);
-	as1 .compex .envariable = as0 .compex .operand [0];
+	const as0 = current_stack .get (0);
+	const as1 = current_stack .get (1);
+	const envariable = as0 .compex .operand [0];
 	as0 .dereference ();
-	as1 .compex .set_flag ("subex"); // <-- Don't work !
 
-	as1 .compex .comparative_computing_order =
+	const exclamark_item =
+		new_stack_item ("Exclamark", "Em", undefined, "!");
+
+	const compex  = exclamark_item .compex;
+	const operand = compex .operand;
+
+	operand [idx_assigned_expression] = as1 .compex;
+
+	operand [idx_var_name] =
+		new_stack_item ("leaf", "leaf", envariable, "leaf") .compex;
+
+	compex .set_flag ('subex');
+
+	compex .get_target_str_uid = () =>
+		compex_to_infix_str (operand [idx_var_name]);
+
+	compex .comparative_computing_order =
 		current_stack .get_next_computing_order ();
 
-//    current_stack .to_next_computing_order ();
-	var asi = new Abstract_stack_item ();
-	asi .compex = as1 .compex;
-	current_stack .assignments .push (asi);
+	current_stack .assignments .push (exclamark_item);
+
 	current_stack .pop ();
 	current_stack .pop ();
+}
+
+
+function exclamark_target_translation_semantics (operand)
+{
+	return compex_to_infix_str (operand [idx_assigned_expression]);
 }
 
 
@@ -1981,6 +2050,10 @@ function fetch_semantics ()
 
 	var item = new_stack_item ("leaf", "leaf", undefined, "leaf");
 	item .compex .operand [0] = name;
+
+	item .compex .comparative_computing_order =
+		current_stack .get_next_computing_order ();
+
 	current_stack .push (item);
 }
 
@@ -2072,12 +2145,46 @@ function time_semantics ()
 {
 	var another_newdate_operation =
 		new_stack_item ("Native", "Nat", undefined, "time");
-	
+
 	another_newdate_operation .compex .comparative_computing_order =
 		current_stack .get_next_computing_order ();
 
 	current_stack .push (another_newdate_operation);
 	current_stack .set_flag ("no-pure-presented");
+}
+
+
+function push_semantics ()
+{
+	// At time need check and force declare of identifier if not
+	// Or find and substitute
+	const op_right_pushee	= current_stack .pop () .compex;
+	const op_left_list		= current_stack .pop () .compex;
+	const operands			= [op_left_list, op_right_pushee];
+
+	const push_operation =
+		new_stack_item ("Native", "Nat", undefined, "push");
+
+	push_operation .compex .operand = operands;
+	push_operation .compex .set_flag ('subex');
+
+	push_operation .compex .comparative_computing_order =
+		current_stack .get_next_computing_order ();
+
+	current_stack .push (push_operation);
+	current_stack .set_flag ("no-pure-presented");
+}
+
+
+function push_target_translation_semantics (operand, cpx, opts = {})
+{
+	const list_name	= compex_to_infix_str (operand [0], { requested: 'target uid' });
+	const pushee	= compex_to_infix_str (operand [1]);
+
+	if (fsml_systate .need_full_substitution)
+		return list_name;
+	else
+		return `(${list_name} .push (${pushee}), ${list_name})`;
 }
 
 
@@ -2087,7 +2194,9 @@ const tests = name =>
 (
 	name ||= 'factorial',
 	({
-		'factorial': '12 dup [ 1 [ over * over 1 - ] while swap dp ] [ 0 ] if .eval'
+		'factorial': '12 dup [ 1 [ over * over 1 - ] while swap dp ] [ 0 ] if .eval',
+		'apply-summ': '12 34 [ [ + ] apply ] apply',
+		'hold-fetch': 'factorial .test asd ! asd @ .js .eval'
 	})
 	[name] || "'\\ OMG! Bad name for test'"
 );

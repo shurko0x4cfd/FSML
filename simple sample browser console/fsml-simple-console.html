@@ -1,47 +1,35 @@
-<!doctype html> <!-- (c) 2021, 2022 Alexander Stadnichenko -->
-<html lang=en>
-    <head>
-        <meta charset="utf-8" />
-        <link rel="stylesheet" href="fsml-simple-console.css" type="text/css" title="some-stile" />
-        <title>FSML elementary development environment</title>
-    </head>
+<!doctype html> <!-- (c) 2021, 2023 Alexander Stadnichenko -->
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" href="fsml-simple-console.css" type="text/css" title="some-stile" />
+	<title>FSML elementary development environment</title>
+</head>
+
 <body>
-<div id="topwrapper">
+	<div id="topwrapper">
+		<div id="leftpane">
+			<div id="fsmlogo">
+				<br>
+				<br> ==========================================================
+				<br>                            FSML
+				<br> ==========================================================
+				<br>
+				<br> FSML 0.4.5, (c) 2021, 2023 Alexander (Shúrko) Stadnichenko
+				<br> Type 'help' to FSML help you,
+				<br> 'license' to view BSD license, 'bb' to farewell
+				<br> &nbsp;
+			</div>
 
-<div id="leftpane">
+			<div id="fsmlog" class="ws-pre"></div>
 
-<div id="fsmlogo">
-    <br>
-    <br>==========================================================
-    <br>                           FSML                           
-    <br>==========================================================
-    <br>
-    <br> FSML 0.4.2, (c) 2021, 2023 Alexander (Shurko) Stadnichenko
-    <br> Type 'help' to FSML help you,
-    <br> 'license' to view BSD license, 'bb' to farewell
-    <br> &nbsp;
-</div>
+			<form id="inputform">
+				<input name="inbox" id="inbox" autofocus placeholder=">">
+			</form>
+		</div>
+	</div>
 
-<div id="fsmlog" class="ws-pre"></div>
-
-<form id="inputform">
-     <input name="inbox" id="inbox" autofocus placeholder=">">
-</form>
-
-</div>
-
-</div> <!-- top wrapper -->
-
-<script type='module' src="fsml-simple-console.js"></script>
+	<script type='module' src="fsml-simple-console.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-

@@ -1,7 +1,7 @@
 {
 	"name": "fsmlang",
 	"type": "module",
-	"version": "0.4.2",
+	"version": "0.4.5",
 	"description": "FSML - homoiconic postfix concatenative programming language. JS implementation",
 	"main": "dist/fsml.js",
 	"scripts": {
@@ -20,7 +20,7 @@
 		"poinfree",
 		"tacit"
 	],
-	"author": "Alexander (Shurko) Stadnichenko",
+	"author": "Alexander (Shúrko) Stadnichenko",
 	"license": "BSD-2-Clause",
 	"bugs": {
 		"url": "https://github.com/shurko0x4cfd/FSML/issues"
