@@ -167,7 +167,7 @@ function deep_copy ()
 			current_stack .get_utmost_computing_order ();
 	}
 
-	for (const i in new_object)
+	for (const i in Object .keys (new_object))
 	{
 		const item = new_object [i];
 		const duplicable =
@@ -1122,7 +1122,7 @@ function Compex (operands, operator)
 	{
 		// if str_uid is charact of rels must be the same for Q
 		obj .str_uid = new_str_uid ("compex");
-		obj .target_str_uid = new_str_uid ("subex");
+		obj .target_str_uid = undefined;
 
 		return obj;
 	}
