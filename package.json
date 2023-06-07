@@ -1,6 +1,6 @@
 {
 	"name": "fsmlang",
-	"version": "0.4.7",
+	"version": "0.4.8",
 	"description": "FSML - homoiconic postfix concatenative programming language. JS implementation",
 	"type": "module",
 	"main": "dist/fsml.js",
@@ -27,7 +27,10 @@
 	"license": "BSD-2-Clause",
 	"bugs": {
 		"url": "https://github.com/shurko0x4cfd/FSML/issues",
-		"email" : "shurko0x4cfd@gmail.com"
+		"email": "shurko0x4cfd@gmail.com"
 	},
-	"homepage": "https://github.com/shurko0x4cfd/FSML#readme"
+	"homepage": "https://github.com/shurko0x4cfd/FSML#readme",
+	"dependencies": {
+		"raffinade": "^0.0.17"
+	}
 }
