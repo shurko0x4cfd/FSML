@@ -1,9 +1,12 @@
 {
 	"name": "fsmlang",
-	"type": "module",
-	"version": "0.4.5",
+	"version": "0.4.7",
 	"description": "FSML - homoiconic postfix concatenative programming language. JS implementation",
+	"type": "module",
 	"main": "dist/fsml.js",
+	"bin": {
+		"fsml": "./bin/fsml.js"
+	},
 	"scripts": {
 		"test": "echo \"No test presented yet\" && exit 1"
 	},
@@ -23,7 +26,8 @@
 	"author": "Alexander (Shúrko) Stadnichenko",
 	"license": "BSD-2-Clause",
 	"bugs": {
-		"url": "https://github.com/shurko0x4cfd/FSML/issues"
+		"url": "https://github.com/shurko0x4cfd/FSML/issues",
+		"email" : "shurko0x4cfd@gmail.com"
 	},
 	"homepage": "https://github.com/shurko0x4cfd/FSML#readme"
 }

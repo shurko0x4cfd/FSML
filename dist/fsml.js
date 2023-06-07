@@ -1,10 +1,10 @@
 
-/* FSML 0.4.5 */
+/* FSML 0.4.7 */
 
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichenko */
 /* License : BSD-2-Clause */
-/* Upd : 23.06.01 */
+/* Upd : 23.06.05 */
 
 
 /** Temp support to Firefox. Will be removed at time FF implement toReversed() */
