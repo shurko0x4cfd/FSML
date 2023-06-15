@@ -39,8 +39,8 @@ Example of string concatenation in loop :
 ```factor
 "" comma !
 2 "" [ comma @ + ' somename_' + over + '_alias = somename_' + over + ', ' comma ! over 1 - ] while swap dp
-'var ' swap + ';' +
+'let ' swap + ';' +
 .eval dp
 
-[var somename_2_alias = somename_2, somename_1_alias = somename_1;]
+[let somename_2_alias = somename_2, somename_1_alias = somename_1;]
 ```

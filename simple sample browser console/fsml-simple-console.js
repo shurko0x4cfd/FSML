@@ -2,7 +2,7 @@
 /* FSML EDE 0.3 */
 
 /* FSML programming language elementary IDE */
-/* (c) 2021, 2022 Alexander Stadnichenko */
+/* (c) 2021, 2022 Alexander Stadnichénko */
 /* License : BSD */
 /* Ver : 0.3.7 */
 /* Upd : 23.06.15 */
@@ -10,7 +10,7 @@
 /* eslint-disable */
 
 
-import { get_fsml_instance } from '../dist/fsml.js';
+import { get_fsml_instance } from './fsml.js';
 
 
 

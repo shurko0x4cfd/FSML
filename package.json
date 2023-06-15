@@ -1,6 +1,6 @@
 {
 	"name": "fsmlang",
-	"version": "0.4.10",
+	"version": "0.4.11",
 	"description": "FSML - homoiconic postfix concatenative programming language. JS implementation",
 	"type": "module",
 	"main": "dist/fsml.js",
@@ -12,7 +12,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/shurko0x4cfd/FSML.git"
+		"url": "git+https://github.com/Shúrko0x4cfd/FSML.git"
 	},
 	"keywords": [
 		"homoiconicity",
@@ -23,13 +23,13 @@
 		"poinfree",
 		"tacit"
 	],
-	"author": "Alexander (Shúrko) Stadnichenko",
+	"author": "Alexander (Shúrko) Stadnichénko",
 	"license": "BSD-2-Clause",
 	"bugs": {
-		"url": "https://github.com/shurko0x4cfd/FSML/issues",
-		"email": "shurko0x4cfd@gmail.com"
+		"url": "https://github.com/Shúrko0x4cfd/FSML/issues",
+		"email": "Shúrko0x4cfd@gmail.com"
 	},
-	"homepage": "https://github.com/shurko0x4cfd/FSML#readme",
+	"homepage": "https://github.com/Shúrko0x4cfd/FSML#readme",
 	"dependencies": {
 		"raffinade": "^0.0.17"
 	}
