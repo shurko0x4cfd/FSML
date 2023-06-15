@@ -4,8 +4,8 @@
 /* FSML programming language elementary IDE */
 /* (c) 2021, 2022 Alexander Stadnichenko */
 /* License : BSD */
-/* Ver : 0.3.6 */
-/* Upd : 22.08.27 */
+/* Ver : 0.3.7 */
+/* Upd : 23.06.15 */
 
 /* eslint-disable */
 
@@ -42,18 +42,24 @@ function handle_submit (evt)
 	const scroll_amount = 1000;
 
 	const inbox = evt .target .children [0];
-	const logtext = inbox .value;
+	const source = inbox .value;
 	inbox .value = "";
 
-	logtext &&
-		fsmlog_type ("\n\n" + logtext);
+	source && fsmlog_type ("\n\n" + source);
 
-	const fsml_eval_result = fsml .eval (logtext) || '';
-		
-	fsml_eval_result &&
-		fsmlog_type ("\n\n" + fsml_eval_result);
+	const evaluated = fsml .eval (source);
+	const text      = evaluated .text;
+
+	text && fsmlog_type ("\n\n" + text);
 
 	const stack = fsml .stack .type ();
+
+	if (evaluated .done)
+	{
+		inputform.removeEventListener ("submit", handle_submit);
+		handle_submit = () => undefined;
+		return;
+	}
 
 	fsmlog_type ("\n\n" + '[' + fsml .stack .depth () + ']  ');
 

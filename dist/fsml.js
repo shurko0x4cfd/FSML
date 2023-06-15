@@ -1,10 +1,13 @@
 
-/* FSML 0.4.8 */
+/* FSML 0.4.10 */
 
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichenko */
 /* License : BSD-2-Clause */
-/* Upd : 23.06.05 */
+/* Upd : 23.06.15 */
+
+
+import { cl } from '../node_modules/raffinade/JS/raffinade.js';
 
 
 /** Temp support to Firefox. Will be removed at time FF implement toReversed() */
@@ -17,9 +20,6 @@
 			enumerable: false,
 		}
 	);
-
-
-const cl = console .log;
 
 
 /* Defaults for formatting output text */
@@ -71,13 +71,15 @@ let BSD_2_Clause_license =
 	LOSS OF USE,  DATA, OR PROFITS; OR BUSINESS INTERRUPTION)  HOWEVER CAUSED AND ON${cr}\
 	ANY  THEORY  OF  LIABILITY,  WHETHER  IN CONTRACT,  STRICT  LIABILITY,  OR  TORT${cr}\
 	(INCLUDING NEGLIGENCE OR  OTHERWISE) ARISING IN ANY  WAY OUT OF THE  USE OF THIS${cr}\
-	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.${cr}`;
+	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.`;
 
 
 const fsml_systate =
 {
+	done: false,
 	need_full_substitution: false,
-	quote_default_type: '"'
+	quote_default_type: '"',
+	no_type_farewell: false
 };
 
 const stacks_chain = [];
@@ -145,7 +147,9 @@ const get_fsml_instance = () =>
 				type: type_stack,
 				depth: () => current_stack .depth ()
 			},
-		eval: fsml_eval
+		eval: fsml_eval,
+		no_type_farewell: () => fsml_systate .no_type_farewell = true,
+		type_farewell: (type = true) => fsml_systate .no_type_farewell = !type
 	});
 
 
@@ -721,16 +725,24 @@ function synonymous (compex)
 
 function fsml_eval (fsml_in)
 {
+	if (fsml_systate .done)
+		return { text: '', done: true };
+
 	try {
 		fsml_in = alt_split (fsml_in);
 
 		for (let i in fsml_in)
 			compile_term (fsml_in [i][0], fsml_in [i][1]);
 
-		const buffer_output = output_buffer;
-		output_buffer = '';
+		const evaluated =
+		{
+			text: output_buffer,
+			done: fsml_systate .done
+		};
 
-		return buffer_output || undefined;
+		output_buffer  = '';
+
+		return evaluated;
 
 	} catch (exc) {
 		exc = exc .toString ();
@@ -850,8 +862,8 @@ var base_voc = {
 //    "":    new FsmlOperation ("", [], _semantics, _target_translation_semantics),
 
 	"license":  new FsmlOperation ("license", [],  license_semantics),
-	"bb":		new FsmlOperation
-		("bb", [],  () => fsmlog_type(cr + "Bye-bye. See you later")),
+	"bb":		new FsmlOperation ("bb", [], bb_semantics),
+	"help":		new FsmlOperation ("help", [], help_semantics),
 
 	"tojs":		new FsmlOperation ("tojs", [], tojs_semantics),
 	".js":		new FsmlOperation (".js", [], dot_js_semantics),
@@ -1026,7 +1038,7 @@ function dot_eval_semantics ()
 
 	// If result is str with ',' ?
 	evalresult_formatted =
-		cr + cr + "evaluated stack: [ "
+		"evaluated stack: [ "
 		+ evalresult_raw .toString () .replace (/,/g,", ") + " ]";
 
 	fsmlog_type (evalresult_formatted);
@@ -2131,6 +2143,50 @@ function over_semantics ()
 }
 
 
+function bb_semantics ()
+{
+	fsml_systate .done = true;
+
+	!fsml_systate .no_type_farewell &&
+		fsmlog_type ('Bye-bye. See you later');
+}
+
+
+function help_semantics ()
+{
+	fsmlog_type
+	(`Terminology:\
+		${cr}\
+		${cr}asg - abstract semantics graph\
+		${cr}term - like Forth word, but term strictly can't be subject of parsing\
+		${cr}tos - top of stack - the top of the stack or the expression on the top of the stack\
+		${cr}supplier-object - ?\
+		${cr}\
+		${cr}Interesting just for first but not practically significant terms:\
+		${cr}\
+		${cr}red - i.e 'reduce' - calculate top of stack for become it to primitive if possible,\
+		${cr}generally is not. For example expression with variables can't be reduced\
+		${cr}\
+		${cr}Termset:\
+		${cr}\
+		${cr}.js - transpile to JS and type the result\
+		${cr}.eval - transpile to JS, evaluate if environment support this and\
+		${cr}type the evaluation result as a evaluated stack\
+		${cr}! (string any -- variable-id) - 'hold' - hold in variable (without explicit declaring)\
+		${cr}@ (string -- variable-id) - 'fetch' - convert variable name to asg-node variable-id\
+		${cr}include the asg node in subsequent expressions\
+		${cr}if (quotation quotation condition -- supplier-object) - if statement\
+		${cr}exactly as in the Factor: https://docs.factorcode.org/content/word-if,kernel.html\
+		${cr}for example text: true [ 'will true' ] [ 'will false' ] if .eval dp\
+		${cr}leave text: 'will true' on tos\
+		${cr}while - less or more like Factor's 'naive' loop:\
+		${cr}https://docs.factorcode.org/content/word-loop,kernel.html\
+		${cr}list ( -- list-id) - new empty array/list of target language, currently is only JS\
+		${cr}push (any list-id -- list-id) - append tos to list\
+	`);
+}
+
+
 function license_semantics ()
 	{ fsmlog_type (BSD_2_Clause_license) }
 
@@ -2194,7 +2250,8 @@ const tests = name =>
 (
 	name ||= 'factorial',
 	({
-		'factorial': '12 dup [ 1 [ over * over 1 - ] while swap dp ] [ 0 ] if .eval',
+		'factorial': 'dup [ 1 [ over * over 1 - ] while swap dp ] [ 0 ] if .eval',
+		'factorial-12': '12 factorial .test',
 		'apply-summ': '12 34 [ [ + ] apply ] apply',
 		'hold-fetch': 'factorial .test asd ! asd @ .js .eval'
 	})
