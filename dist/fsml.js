@@ -1,10 +1,10 @@
 
-/* FSML 0.4.11 */
+/* FSML 0.5.0 */
 
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichénko */
 /* License : BSD-2-Clause */
-/* Upd : 23.06.15 */
+/* Upd : 23.06.17 */
 
 
 import { cl } from 'raffinade';
@@ -728,28 +728,28 @@ function fsml_eval (fsml_in)
 	if (fsml_systate .done)
 		return { text: '', done: true };
 
-	try {
-		fsml_in = alt_split (fsml_in);
+	fsml_in = alt_split (fsml_in);
 
-		for (let i in fsml_in)
-			compile_term (fsml_in [i][0], fsml_in [i][1]);
-
-		const evaluated =
+	for (let i in fsml_in)
+		try
 		{
-			text: output_buffer,
-			done: fsml_systate .done
-		};
+			compile_term (fsml_in [i][0], fsml_in [i][1]);
+		}
+		catch (exc)
+		{
+			fsmlog_type ('Environment exception:');
+			fsmlog_type (cr + cr + exc);
+		}
 
-		output_buffer  = '';
+	const evaluated =
+	{
+		text: output_buffer,
+		done: fsml_systate .done
+	};
 
-		return evaluated;
+	output_buffer = '';
 
-	} catch (exc) {
-		exc = exc .toString ();
-
-		fsmlog_type (`${cr}${cr}Environment exception: ${cr}${cr}`)
-		fsmlog_type (exc);
-	}
+	return evaluated;
 }
 
 
