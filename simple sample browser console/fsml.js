@@ -26,7 +26,8 @@ import { cl } from '../node_modules/raffinade/JS/raffinade.js';
 /* Defaults for formatting output text */
 
 let cr = "\n";
-let bl = " ";
+let indent_str = " ";
+let size_indent = 4;
 
 
 /* if default 'fsmlog_type' is not overriden, accumulate fsml output for return
@@ -395,7 +396,7 @@ as_proto .type_stack = function ()
 as_proto .translate_to_js = function ()
 {
 	const self = this;
-	const indent_string =  bl .repeat (current_stack .indent_size);
+	const indent_string =  indent_str .repeat (current_stack .indent_size);
 	fsml_systate .need_full_substitution = false; // ! Bad place
 	this .uids_already_in_equation_left = [];
 	this .str_uids_to_rename = [];
@@ -511,12 +512,12 @@ as_proto .translate_to_js = function ()
 			current_stack .aliastatement +=
 				comma +item +"_copy" +" = " +item;
 
-			comma = "," + cr + indent_string + bl .repeat (15);
+			comma = "," + cr + indent_string + indent_str .repeat (size_indent * 2);
 		});
 
 		if (current_stack .aliastatement)
 			current_stack .aliastatement =
-				cr + indent_string + bl .repeat (8) + "var "
+				cr + indent_string + indent_str .repeat (size_indent) + "var "
 					+ current_stack .aliastatement + ";" + cr;
 	}
 
@@ -533,7 +534,7 @@ function translate_empty_quotation (indent_size, item_names, another_item_names)
 	var assign_statement = "";
 	let comma = "", equation = "";
 
-	var indent_string =  bl .repeat (indent_size);
+	var indent_string =  indent_str .repeat (indent_size);
 
 	item_names = item_names || [];
 
@@ -621,7 +622,7 @@ as_proto ._order_subexpressions = function (compex, item, position)
 {
 	const operator = compex .operator;
 
-	if ((operator === base_voc ["fv"]) &&
+	if ((operator === base_voc ["var"]) &&
 			(compex !== item .compex))
 				return;
 
@@ -670,7 +671,7 @@ as_proto ._order_subexpressions = function (compex, item, position)
 	if (operator === base_voc ["leaf"])
 		return;
 
-	//if (operator === base_voc ["fv"]) { return; }
+	//if (operator === base_voc ["var"]) { return; }
 
 	for (var i = compex .operands_offset;  i < compex .operand .length; i++)
 	{
@@ -882,7 +883,7 @@ var base_voc = {
 	"quotation":	new FsmlOperation ("quotation", ["nowalk"], undefined,
 		quotation_target_translation_semantics),
 
-	"fv":		new FsmlOperation ("fv", ["nowalk"]),
+	"var":		new FsmlOperation ("var", ["nowalk"]),
 
 	"ordered":	new FsmlOperation ("ordered", [], orderd_semantics),
 
@@ -1281,14 +1282,14 @@ function compilit (type, shortype, value)
 
 
 function new_fv_item (fv_index)
-	{ return new_stack_item ("Free variable", "Fv", fv_index, "fv") }
+	{ return new_stack_item ("Variable", "var", fv_index, "var") }
 
 
 function compex_to_infix_str (compex, opts = {})
 {
 	var operator = compex .operator;
 
-	if (operator === base_voc ["fv"])
+	if (operator === base_voc ["var"])
 	{
 		if (current_stack .predefined_argument_names .length)
 		{
@@ -1352,7 +1353,7 @@ function _substitute_variables (compex, p, n)
 			new_utmost_order = compex .comparative_computing_order;
 	}
 
-	if (operator === base_voc ["fv"])
+	if (operator === base_voc ["var"])
 	{
 		var placeholder = p .operand [n] || new Compex ();
 		var substitutional = current_stack .get (compex .operand [0]) .compex;
@@ -1558,7 +1559,7 @@ function if_semantics ()
 		Math .max (quotation_true .tail_starts_from,
 			quotation_false .tail_starts_from);
 
-	for (var i = 0; i < touched +3; i++)
+	for (var i = 0; i < touched + 3; i++)
 	{
 		independent_semantics ();
 
@@ -1566,7 +1567,7 @@ function if_semantics ()
 
 		item .compex .set_flag ("subex");
 
-		item .compex .comparative_computing_order =
+		item .compex .comparative_computing_order = // ||=
 			item .compex .comparative_computing_order ||
 				current_stack .get_next_computing_order ();
 
@@ -1635,92 +1636,69 @@ function if_semantics ()
 }
 
 
-function if_target_translation_semantics (operand, if_object)
+function quot_to_js (obj, quot, arg_names_for_quotation, new_indent)
 {
-	var condition_str_uid = operand [2] .get_target_str_uid ();
-	var names_offset = 0;
+	const transpiled = {};
 
-	operand .slice (0, 3)
-		.forEach (item =>
-			item .operator === base_voc ["fv"] && (names_offset++));
-
-	/* var predefined_argument_names = current_stack .predefined_argument_names
-		.slice (names_offset); */ /* Obsoleted ? */
-
-	var arg_names_for_quotation = operand .slice (3) .map
-		(function (item)
-		{
-			if (item .operator === base_voc ["fv"]) // FIXME
-				var t =
-					current_stack
-						.predefined_argument_names [item .operand [0]];
-
-			return t || item .get_target_str_uid ();
-		});
-
-	var target_text = "";
-	var new_indent = current_stack .indent_size +8;
-
-	var quot,
-		_nested_text = "",
-		nested_text = "",
-		nested_text_else = "",
-		_rename_str_uids,
-		rename_str_uids,
-		rename_str_uids_else;
-
-	function quot_to_js ()
+	if (quot .container .length !== 0)
 	{
-		if (quot .container .length !== 0)
-		{
-			stacks_chain .push (current_stack);
-			current_stack = quot;
+		stacks_chain .push (current_stack);
+		current_stack = quot;
 
-			current_stack .item_names =
-				if_object .item_names .toReversed ();
+		current_stack .item_names =
+			obj .item_names .toReversed ();
 
-			current_stack .another_item_names =
-				if_object .another_item_names .toReversed ();
+		current_stack .another_item_names =
+			obj .another_item_names .toReversed ();
 
-			current_stack .predefined_argument_names = arg_names_for_quotation;
-			current_stack .indent_size = new_indent;
-			current_stack .translate_to_js ();
-			_nested_text = current_stack .target_text;
-			_rename_str_uids = current_stack .str_uids_to_rename;
-			current_stack = stacks_chain .pop ();
+		current_stack .predefined_argument_names = arg_names_for_quotation;
+		current_stack .indent_size = new_indent;
+		current_stack .translate_to_js ();
+		transpiled .nested_text = current_stack .target_text;
+		transpiled .rename_str_uids = current_stack .str_uids_to_rename;
+		current_stack = stacks_chain .pop ();
 
-			current_stack .uids_already_in_equation_left =
-				current_stack .uids_already_in_equation_left
-						.concat (arg_names_for_quotation);
-		} else {
-			_nested_text =
-				translate_empty_quotation (new_indent,
-					if_object .item_names .toReversed (),
-					if_object .another_item_names .toReversed ());
-		}
+		current_stack .uids_already_in_equation_left =
+			current_stack .uids_already_in_equation_left
+					.concat (arg_names_for_quotation);
+	} else {
+		transpiled .nested_text =
+			translate_empty_quotation (new_indent,
+				obj .item_names .toReversed (),
+				obj .another_item_names .toReversed ());
 	}
 
-	quot = operand [1] .operand [0];
-	quot_to_js ();
-	var aliastatement = current_stack .aliastatement;
-	nested_text = _nested_text;
-	rename_str_uids = _rename_str_uids;
+	return transpiled;
+}
 
-	quot = operand [0] .operand [0];
-	quot_to_js ();
-	var aliastatement_else = current_stack .aliastatement;
-	nested_text_else = _nested_text;
-	rename_str_uids_else = _rename_str_uids;
 
-	var indent_string =  bl .repeat (current_stack .indent_size);
+function if_target_translation_semantics (operand, if_object)
+{
+	const condition_str_uid = operand [2] .get_target_str_uid ();
 
-	var target_text =
-		cr + indent_string + "if (" +condition_str_uid +")\n{"
-		+ nested_text
-		+ cr +indent_string + "} else {"
-		+nested_text_else + "\n}" || "";
+	const arg_names_for_quotation = operand .slice (3) .map (item =>
+		(
+			item .operator === base_voc ["var"] &&
+				current_stack .predefined_argument_names [item .operand [0]]
+		)
+		|| item .get_target_str_uid ());
 
-	return target_text; }
+	const new_indent = current_stack .indent_size + size_indent;
+
+	const nested_text = idx =>
+			quot_to_js (if_object, operand [idx] .operand [0], arg_names_for_quotation,
+				new_indent) .nested_text;
+
+	const [nested_text_if, nested_text_else] = [1, 0] .map (nested_text);
+
+	const indent_string = indent_str .repeat (current_stack .indent_size);
+
+	return cr
+		+ indent_string + "if (" + condition_str_uid + ")\n{"
+		+ nested_text_if
+		+ cr + indent_string + "} else {"
+		+ nested_text_else + "\n}" || "";
+}
 
 
 function if_supplier_target_translation_semantics (operand)
@@ -1822,74 +1800,29 @@ function while_semantics ()
 
 function while_target_translation_semantics (operand, while_object)
 {
-	var condition_str_uid = while_object .item_names [0];
+	const condition_str_uid = while_object .item_names [0];
 
-	var arg_names_for_quotation = operand .slice (1) .map (function (item)
-		{
-			if (item .operator === base_voc ["fv"]) // FIXME
-				var t = current_stack
-					.predefined_argument_names [item .operand [0]];
+	const arg_names_for_quotation = operand .slice (1) .map (item =>
+		item .operator === base_voc ["var"] ?
+			current_stack .predefined_argument_names [item .operand [0]] ||
+				item .get_target_str_uid () : item .get_target_str_uid ());
 
-			return t || item .get_target_str_uid ();
-		});
-
-	var target_text = "";
-	var new_indent = current_stack .indent_size +8;
-
-	var quot,
-		_nested_text = "",
-		nested_text = "",
-		_rename_str_uids,
-		rename_str_uids;
+	const new_indent = current_stack .indent_size + size_indent;
 
 	while_object .item_names =
 		[while_object .item_names [0]] .concat (arg_names_for_quotation);
 
-	function quot_to_js ()
-	{
-		if (quot .container .length !== 0)
-		{
-			stacks_chain .push (current_stack);
-			current_stack = quot;
+	const quot = operand [0] .operand [0];
 
-			current_stack .item_names =
-				while_object .item_names .toReversed ();
+	const nested_text =
+		quot_to_js (while_object, quot, arg_names_for_quotation, new_indent) .nested_text;
 
-			current_stack .another_item_names =
-				while_object .another_item_names .toReversed ();
+	const indent_string = indent_str .repeat (current_stack .indent_size);
 
-			current_stack .predefined_argument_names = arg_names_for_quotation;
-			current_stack .indent_size = new_indent;
-			current_stack .translate_to_js ();
-			_nested_text = current_stack .target_text;
-			_rename_str_uids = current_stack .str_uids_to_rename;
-			current_stack = stacks_chain .pop ();
-
-			current_stack .uids_already_in_equation_left =
-				current_stack .uids_already_in_equation_left
-					.concat (arg_names_for_quotation);
-		}
-		else
-		{
-			_nested_text =
-				translate_empty_quotation (new_indent,
-					while_object .item_names .toReversed (),
-					while_object .another_item_names .toReversed ());
-		}
-	}
-
-	quot = operand [0] .operand [0];
-	quot_to_js ();
-	nested_text = _nested_text;
-	rename_str_uids = _rename_str_uids;
-
-	var indent_string =  bl .repeat (current_stack .indent_size);
-
-	var target_text = cr + indent_string + "do { "
-					 + nested_text
-					 + cr + cr + indent_string + "} while (" + condition_str_uid + ");";
-
-	return target_text;
+	return cr
+		+ indent_string + "do { "
+		+ nested_text
+		+ cr + cr + indent_string + "} while (" + condition_str_uid + ");";
 }
 
 
@@ -2254,7 +2187,7 @@ const tests = name =>
 		'factorial': 'dup [ 1 [ over * over 1 - ] while swap dp ] [ 0 ] if .eval',
 		'factorial-12': '12 factorial .test',
 		'apply-summ': '12 34 [ [ + ] apply ] apply',
-		'hold-fetch': 'factorial .test asd ! asd @ .js .eval'
+		'hold-fetch': 'factorial .test asd ! asd @ .js .eval' // ! isnt do .js
 	})
 	[name] || "'\\ OMG! Bad name for test'"
 );
