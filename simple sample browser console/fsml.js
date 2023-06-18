@@ -1,12 +1,13 @@
 
-/* FSML 0.5.0 */
+/* FSML 0.5.1 */
 
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichénko */
 /* License : BSD-2-Clause */
-/* Upd : 23.06.17 */
+/* Upd : 23.06.18 */
 
 
+// import { cl } from 'raffinade';
 import { cl } from '../node_modules/raffinade/JS/raffinade.js';
 
 
@@ -726,7 +727,7 @@ function synonymous (compex)
 function fsml_eval (fsml_in)
 {
 	if (fsml_systate .done)
-		return { text: '', done: true };
+		return { text: 'Done', done: true };
 
 	fsml_in = alt_split (fsml_in);
 

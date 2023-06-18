@@ -18,7 +18,7 @@ cl(`
                                         FSML
             ===========================================================
 
-            FSML 0.5.0, (c) 2021, 2023 Alexander (Shúrko) Stadnichénko
+            FSML 0.5.1, (c) 2021, 2023 Alexander (Shúrko) Stadnichénko
                         Type 'help' to FSML help you,
                  'license' to view BSD license, 'bb' to farewell
 `);
