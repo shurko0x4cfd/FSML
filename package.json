@@ -1,6 +1,6 @@
 {
 	"name": "fsmlang",
-	"version": "0.5.2",
+	"version": "0.5.4",
 	"author": "Alexander (Shúrko) Stadnichénko",
 	"license": "BSD-2-Clause",
 	"description": "FSML - homoiconic postfix concatenative programming language. JS implementation",
@@ -10,7 +10,7 @@
 		"fsml": "./bin/fsml.js"
 	},
 	"scripts": {
-		"test": "echo \"No test presented yet\" && exit 1"
+		"flow-type-check": "src/scripts/flow-type-check.sh"
 	},
 	"repository": {
 		"type": "git",
@@ -32,5 +32,8 @@
 	"homepage": "https://github.com/shurko0x4cfd/FSML#readme",
 	"dependencies": {
 		"raffinade": "^0.0.17"
+	},
+	"devDependencies": {
+		"flow-bin": "^0.209.0"
 	}
 }
