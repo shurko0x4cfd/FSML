@@ -1,0 +1,17 @@
+[ignore]
+
+[include]
+../../dist/fsml.js
+
+[libs]
+# ../flow-typed
+
+[lints]
+
+[options]
+# all=true
+
+# Now this is not work
+# log.file='../logs/flow/flow.log'
+
+[strict]
