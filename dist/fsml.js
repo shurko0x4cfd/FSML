@@ -307,9 +307,9 @@ as_proto .materialize_tail = function (lack)
 {
 	var tail = [];
 
-	for (let fv_index = this .tail_starts_from + lack - 1;
-		fv_index >= this .tail_starts_from; fv_index--)
-			tail .push (new_fv_item (fv_index));
+	for (let var_index = this .tail_starts_from + lack - 1;
+		var_index >= this .tail_starts_from; var_index--)
+			tail .push (new_var_item (var_index));
 
 	return tail;
 }
@@ -1292,8 +1292,8 @@ function compilit (type, shortype, value)
 	{ current_stack .push (new_stack_item (type, shortype, value, "leaf")) }
 
 
-function new_fv_item (fv_index)
-	{ return new_stack_item ("Variable", "var", fv_index, "var") }
+function new_var_item (var_index)
+	{ return new_stack_item ("Variable", "var", var_index, "var") }
 
 
 function compex_to_infix_str (compex, opts = {})
@@ -1317,7 +1317,7 @@ function compex_to_infix_str (compex, opts = {})
 			return name;
 		}
 		else
-			return "fv_" +compex .operand [0];
+			return "var_" +compex .operand [0];
 	}
 
 	if ((compex .reference_count > 1 || operator .check_flag ("nopure"))
