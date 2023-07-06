@@ -1,10 +1,11 @@
 
-/* FSML 0.5.4 */
+/* FSML 0.5.5 */
 
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichénko */
 /* License : BSD-2-Clause */
-/* Upd : 23.06.18 */
+
+/* @flow */
 
 
 // import { cl } from 'raffinade';
@@ -17,7 +18,10 @@ import { cl } from '../node_modules/raffinade/JS/raffinade.js';
 		Array.prototype,
 		'toReversed',
 		{
-			value: function () { return this .slice () .reverse () },
+			value: function (/* this: Array<any> */) /*: Array<any> */
+			{
+				return this .slice () .reverse ();
+			},
 			enumerable: false,
 		}
 	);
@@ -25,16 +29,16 @@ import { cl } from '../node_modules/raffinade/JS/raffinade.js';
 
 /* Defaults for formatting output text */
 
-let cr = "\n";
-let indent_str = " ";
-let size_indent = 4;
+let cr /*: string */ = "\n";
+let indent_str /*: string */ = " ";
+let size_indent /*: number */ = 4;
 
 
 /* if default 'fsmlog_type' is not overriden, accumulate fsml output for return
    to environmen at end of compilation. Otherwise use external 'fsmlog_type'
    for type immediately */
 
-let output_buffer = '';
+let output_buffer /*: string */ = '';
 
 
 /** Default way to output is just accumulate output in buffer and then return
@@ -42,14 +46,14 @@ let output_buffer = '';
  * @arg		{string} text	Append id to output
  * @return	{string}		Output buffer
  */
-const default_fsmlog_type = text =>
+const default_fsmlog_type = (text /*: string */) /*: string */  =>
 	output_buffer += text;
 
 /* And set it as default until overriden */
-let fsmlog_type = default_fsmlog_type;
+let fsmlog_type /*: Function */ = default_fsmlog_type;
 
 
-let BSD_2_Clause_license =
+let BSD_2_Clause_license /*: string */ =
 	` \
 	Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichénko${cr}\
 	${cr}\
@@ -88,7 +92,7 @@ const stacks_chain = [];
 
 
 /* Precedence of target language operations (JS) */
-let js_operation_precedence =
+const js_operation_groups_precedence =
 	[
 		/*  0 */ [">"],
 		/*  1 */ ["+", "-"],
@@ -100,12 +104,12 @@ let js_operation_precedence =
 /* Now and below senseless short names like f, g, h for function factored out
    Immediately before it user */
 
-let f = (acc, arrg, idx) =>
+const f /*: Function */ = (acc, arrg, idx) =>
 	(arrg .forEach (itm => acc [itm] = idx), acc);
 
 /* Convert to object { operation: precedence, ... } */
-js_operation_precedence =
-	js_operation_precedence
+const js_operation_precedence /*: Object */ =
+	js_operation_groups_precedence
 		.reduce (f, {});
 
 js_operation_precedence .leaf = 100;
@@ -117,12 +121,68 @@ js_operation_precedence .leaf = 100;
  * @return	{string}		Unique string identifier
  */
 const new_str_uid =
-	((uids = {}) =>
-		prefix =>
+	((uids /*: Object */ = {}) =>
+		(prefix /*: string */) =>
 			(prefix in uids ^ true
 				&& (uids [prefix] = 0),
 			 prefix + "_" + uids [prefix] ++))();
 
+
+class Abstract_stack {
+	this /*: Abstract_stack */;
+	dc /*: Function */ = deep_copy;
+
+	dc_postprocess = function (obj /*: Object */) /*: Object */
+	{
+		obj.str_uid = new_str_uid ("quotation");
+		obj.actual_target_names = false;
+
+		return obj;
+	}
+
+	str_uid /*: string */ = new_str_uid ("quotation");
+	flags /*: Array<string> */ = [];
+
+	// When performed deep copy of quotation we need to reset cached identifiers
+	// of target language in copy because old names belong to original quotation
+	actual_target_names = true;
+
+	// Indexes is comparative, absolute value is never matter
+	utmost_computing_order = 0;
+
+	// For translation with no assign real order for stackitems
+	pseudo_order = 0;
+
+	tail_starts_from = 0; // Even if container presented ?
+	container /*: Array<Object> */ = [];
+	assignments /*: Array<Abstract_stack_item> */ = [];
+
+	_need_id_substitution /*: Compex */;
+	isloop = false;
+	ordered_subexpressions /*: Array<any> */ = [];
+
+	// [ "str", "str", ... "str" ] Precalculated function argument names
+	// or top stack values at loop start if any
+	predefined_argument_names /*: Array<string> */ = [];
+	item_names /*: Array<string> */ = [];
+	another_item_names /*: Array<string> */ = [];
+
+	kind_of_next_compilation = "no-incomings";
+
+	compiled_function_name_if_named = "";
+
+	target_text = "";
+	aliastatement = "";
+	indent_size = 0;
+	return_statement = "";
+	return_items /*: Array<any> */ = [];
+	evalresult /*: Array<any> */ = [];
+	uids_already_in_equation_left /*: Array<any> */ = [];
+	str_uids_to_rename /*: Array<any> */ = [];
+
+	// spoiled?
+	depth = () /*: number */ => { return this .container .length; }
+}
 
 let current_stack = new Abstract_stack ();
 
@@ -132,7 +192,7 @@ let current_stack = new Abstract_stack ();
  * @arg		{Function} external_fsmlog_type	External callback provide typing
  * @returns {Function}						Same as arg
  */
-const set_fsmlog_type = (external_fsmlog_type) =>
+const set_fsmlog_type = (external_fsmlog_type /*: Function */) /*: Function */ =>
 	fsmlog_type = external_fsmlog_type;
 
 
@@ -140,7 +200,7 @@ const set_fsmlog_type = (external_fsmlog_type) =>
  * Export object with collection of procedures as FSML external interface
  * @return	{Object}	Provide interface to FSML engine
  */
-const get_fsml_instance = () =>
+const get_fsml_instance = () /*: Object */ =>
 	({
 		set: { typer: set_fsmlog_type },
 		type: fsmlog_type,
@@ -157,7 +217,7 @@ const get_fsml_instance = () =>
 
 /** Perform deep copy of one top stack item. Quite obsoleted */
 
-function deep_copy ()
+function deep_copy () /*: any */
 {
 	const new_object = new this .constructor ();
 
@@ -190,64 +250,9 @@ function deep_copy ()
 }
 
 
-function Abstract_stack (/* container */)
-{
-	this .dc = deep_copy;
-
-	this .dc_postprocess = function (obj)
-	{
-		obj .str_uid = new_str_uid ("quotation");
-		obj .actual_target_names = false;
-
-		return obj;
-	}
-
-	this .str_uid = new_str_uid ("quotation");
-	this .flags = [];
-
-	// When performed deep copy of quotation we need to reset cached identifiers
-	// of target language in copy because old names belong to original quotation
-	this .actual_target_names = true;
-
-	// Indexes is comparative, absolute value is never matter
-	this .utmost_computing_order = 0;
-
-	// For translation with no assign real order for stackitems
-	this .pseudo_order = 0;
-
-	this .tail_starts_from = 0; // Even if container presented ?
-	this .container = [];
-	this .assignments = [];
-
-	this ._need_id_substitution = undefined;
-	this .isloop = false;
-	this .ordered_subexpressions = [];
-
-	// [ "str", "str", ... "str" ] Precalculated function argument names
-	// or top stack values at loop start if any
-	this .predefined_argument_names = [];
-	this .item_names = [];
-	this .another_item_names = [];
-
-	this .kind_of_next_compilation = "no-incomings";
-
-	this .compiled_function_name_if_named = "";
-	this .latest_native_eval_result = [];
-
-	this .target_text = "";
-	this .aliastatement = "";
-	this .indent_size = 0;
-	this .return_statement = "";
-	this .return_items = [];
-	this .evalresult = undefined;
-	this .uids_already_in_equation_left = [];
-	this .str_uids_to_rename = [];
-}
-
-
 var as_proto = Abstract_stack .prototype;
 
-as_proto .depth = function () { return this .container .length; }
+// as_proto .depth = function () { return this .container .length; }
 
 as_proto .items_digest =
 	function () { return this .container .slice (); }
@@ -301,9 +306,9 @@ as_proto .materialize_tail = function (lack)
 {
 	var tail = [];
 
-	for (let fv_index = this .tail_starts_from + lack - 1;
-		fv_index >= this .tail_starts_from; fv_index--)
-			tail .push (new_fv_item (fv_index));
+	for (let var_index = this .tail_starts_from + lack - 1;
+		var_index >= this .tail_starts_from; var_index--)
+			tail .push (new_var_item (var_index));
 
 	return tail;
 }
@@ -876,10 +881,6 @@ var base_voc = {
 
 	"leaf":		new FsmlOperation ("leaf", ["nowalk"]),
 
-	// Why no_equation ?
-	// "quotation": new FsmlOperation ("quotation", ["nowalk", "no_equation"],
-	//		undefined, quotation_target_translation_semantics),
-
 	"quotation":	new FsmlOperation ("quotation", ["nowalk"], undefined,
 		quotation_target_translation_semantics),
 
@@ -934,20 +935,21 @@ var base_voc = {
 	"swap":		new FsmlOperation ("swap", [], swap_semantics),
 	"over":		new FsmlOperation ("over", [], over_semantics),
 
-	// Bugged
-	// "q>l" :	new FsmlOperation
-	// (
-	// 	"quotolist",
-	// 	[],
-	// 	to_list_semantics,
-	// 	to_list_target_translation_semantics
-	// ),
+	// Converting a quotation to a JS list/array whenever possible
+	"q>l" :	new FsmlOperation
+	(
+		"quotolist",
+		["subex"],
+		to_list_semantics,
+		list_target_translation_semantics
+	),
 
+	// New empty JS list/array
 	"list":		new FsmlOperation
 	(
 		'list',
 		[],
-		list_semantics,
+		empty_list_semantics,
 		list_target_translation_semantics
 	),
 
@@ -1069,7 +1071,8 @@ function dot_test_semantics ()
 
 	const evalresult_formatted =
 		"evaluated stack: [ "
-		+ evalresult .toString () .replace (/,/g,", ") + " ]";
+		+ evalresult .join (", ") + " ]";
+		// + evalresult .toString () .replace (/,/g,", ") + " ]";
 
 	fsmlog_type (evalresult_formatted);
 }
@@ -1128,11 +1131,17 @@ function quotation_target_translation_semantics (operand)
 
 // _Postfix_ compound expression - node of semantic graph
 
-function Compex (operands, operator)
+class Compex
 {
-	this .dc = deep_copy;
+	constructor (operands, operator)
+	{
+		this.operand  = operands;
+		this.operator = operator;
+	}
 
-	this .dc_postprocess = function (obj)
+	dc = deep_copy;
+
+	dc_postprocess = function (obj)
 	{
 		// if str_uid is charact of rels must be the same for Q
 		obj .str_uid = new_str_uid ("compex");
@@ -1141,20 +1150,18 @@ function Compex (operands, operator)
 		return obj;
 	}
 
-	this .frozen = false;
-	this .flags = [];
+	frozen = false;
+	flags = [];
 	// immaname
-	this .str_uid = new_str_uid ("compex");
-	this .target_str_uid = undefined;
-	this .operand  = operands;
-	this .operands_offset = 0;
-	this .operator = operator;
-	this .reference_count = 1;
-	this .comparative_computing_order = current_stack .utmost_computing_order;
-	// this .comparative_computing_order = // ?
+	str_uid = new_str_uid ("compex");
+	target_str_uid = undefined;
+	operands_offset = 0;
+	reference_count = 1;
+	comparative_computing_order = current_stack .utmost_computing_order;
+	// comparative_computing_order = // ?
 	//		current_stack .get_next_computing_order ();
-	this .type     = "Expression";
-	this .shortype = "Exp";
+	type     = "Expression";
+	shortype = "Exp";
 }
 
 
@@ -1229,20 +1236,20 @@ function create_binary_compex (operand_0, operand_1, operator)
 	{ return new Compex ([operand_0, operand_1], operator) }
 
 
-function Abstract_stack_item ()
+class Abstract_stack_item
 {
-	this .dc = deep_copy;
+	dc = deep_copy;
 
-	this .dc_postprocess =
+	dc_postprocess =
 		function (obj)
 		{
 			obj .str_uid = new_str_uid ("stackitem");
 			return obj;
 		}
 
-	this .str_id = new_str_uid ("stackitem");
-	this .reference_count = 1;
-	this .compex = create_binary_compex ();
+	str_id = new_str_uid ("stackitem");
+	reference_count = 1;
+	compex = create_binary_compex ();
 }
 
 
@@ -1281,8 +1288,8 @@ function compilit (type, shortype, value)
 	{ current_stack .push (new_stack_item (type, shortype, value, "leaf")) }
 
 
-function new_fv_item (fv_index)
-	{ return new_stack_item ("Variable", "var", fv_index, "var") }
+function new_var_item (var_index)
+	{ return new_stack_item ("Variable", "var", var_index, "var") }
 
 
 function compex_to_infix_str (compex, opts = {})
@@ -1306,7 +1313,7 @@ function compex_to_infix_str (compex, opts = {})
 			return name;
 		}
 		else
-			return "fv_" +compex .operand [0];
+			return "var_" +compex .operand [0];
 	}
 
 	if ((compex .reference_count > 1 || operator .check_flag ("nopure"))
@@ -1457,58 +1464,22 @@ function apply_semantics ()
 
 
 /** New empty JS-like list/array */
-function list_semantics ()
+function empty_list_semantics ()
 {
-	// const expression =  new Compex ([], base_voc ["list"]);
-	const asi = new_stack_item ("List", "lst", undefined, "list");
-	asi .compex .set_flag ('subex');
-	current_stack .push (asi);
+	open_quotation_semantics ();
+	close_quotation_semantics ();
+	to_list_semantics ();
 }
 
 
-// Empty JS list/array
-function list_target_translation_semantics (opd, compex, opts)
-{
-	if (opts .requested === 'target uid')
-		return compex .get_target_str_uid ();
-	else
-		return '[]';
-}
-
-
-/** Limited convertion quotation to JS list. Obsoleted */
-function to_list_semantics ()
-{
-	const as0       = current_stack .get (0),
-		  quotation = as0 .compex .dc (),
-		  asi       = new_stack_item ("List", "Lst", quotation, "quotolist");
-
-	// quotation .dc_postprocess &&
-	// 	quotation .dc_postprocess (quotation);
-
-	quotation ?. dc_postprocess (quotation);
-	quotation .set_flag ("no_equation");
-	quotation .operand [1] = {};
-	quotation .set_flag ("subex");
-	asi .compex .str_uid = new_str_uid ("list");
-	quotation .reference (); // FIXME
-	as0 .dereference ();
-
-	quotation .comparative_computing_order =
-		current_stack .get_next_computing_order ();
-
-	asi .compex .comparative_computing_order =
-		current_stack .get_next_computing_order ();
-
-	current_stack .set (0, asi);
-}
-
-
-/** Limited convertion quotation to JS list. Obsoleted */
-function to_list_target_translation_semantics (operand, parent)
+/** Limited convertion quotation to JS list */
+function list_target_translation_semantics (operand, parent, opts)
 {
 	if (fsml_systate .need_full_substitution)
-		return '"[ ' + parent .str_uid + ' ]"';
+		return parent .str_uid;
+
+	if (opts .requested === 'target uid')
+		return parent .get_target_str_uid ();
 
 	const quotation = operand [0] .operand [0];
 
@@ -1524,6 +1495,32 @@ function to_list_target_translation_semantics (operand, parent)
 	current_stack = stacks_chain .pop ();
 
 	return text;
+}
+
+
+/** Limited convertion quotation to JS list */
+function to_list_semantics ()
+{
+	const as0       = current_stack .get (0);
+	const quotation = as0 .compex .dc ();
+	const asi       = new_stack_item ("list", "lst", quotation, "q>l");
+
+	quotation ?. dc_postprocess (quotation);
+	quotation .set_flag ("no_equation");
+	quotation .operand [1] = {}; // wtf?
+	quotation .set_flag ("subex"); // wtf?
+	asi .compex .set_flag ("subex");
+	asi .compex .str_uid = new_str_uid ("list");
+	quotation .reference (); // FIXME?
+	as0 .dereference ();
+
+	quotation .comparative_computing_order =
+		current_stack .get_next_computing_order ();
+
+	asi .compex .comparative_computing_order =
+		current_stack .get_next_computing_order ();
+
+	current_stack .set (0, asi);
 }
 
 
@@ -2194,4 +2191,3 @@ const tests = name =>
 
 
 export { get_fsml_instance };
-

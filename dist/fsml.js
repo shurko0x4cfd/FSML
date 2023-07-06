@@ -1,10 +1,9 @@
 
-/* FSML 0.5.4 */
+/* FSML 0.5.5 */
 
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichénko */
 /* License : BSD-2-Clause */
-/* Upd : 23.06.26 */
 
 /* @flow */
 
@@ -936,20 +935,21 @@ var base_voc = {
 	"swap":		new FsmlOperation ("swap", [], swap_semantics),
 	"over":		new FsmlOperation ("over", [], over_semantics),
 
-	// Bugged
-	// "q>l" :	new FsmlOperation
-	// (
-	// 	"quotolist",
-	// 	[],
-	// 	to_list_semantics,
-	// 	to_list_target_translation_semantics
-	// ),
+	// Converting a quotation to a JS list/array whenever possible
+	"q>l" :	new FsmlOperation
+	(
+		"quotolist",
+		["subex"],
+		to_list_semantics,
+		list_target_translation_semantics
+	),
 
+	// New empty JS list/array
 	"list":		new FsmlOperation
 	(
 		'list',
 		[],
-		list_semantics,
+		empty_list_semantics,
 		list_target_translation_semantics
 	),
 
@@ -1464,58 +1464,22 @@ function apply_semantics ()
 
 
 /** New empty JS-like list/array */
-function list_semantics ()
+function empty_list_semantics ()
 {
-	// const expression =  new Compex ([], base_voc ["list"]);
-	const asi = new_stack_item ("List", "lst", undefined, "list");
-	asi .compex .set_flag ('subex');
-	current_stack .push (asi);
+	open_quotation_semantics ();
+	close_quotation_semantics ();
+	to_list_semantics ();
 }
 
 
-// Empty JS list/array
-function list_target_translation_semantics (opd, compex, opts)
-{
-	if (opts .requested === 'target uid')
-		return compex .get_target_str_uid ();
-	else
-		return '[]';
-}
-
-
-/** Limited convertion quotation to JS list. Obsoleted */
-function to_list_semantics ()
-{
-	const as0       = current_stack .get (0),
-		  quotation = as0 .compex .dc (),
-		  asi       = new_stack_item ("List", "Lst", quotation, "quotolist");
-
-	// quotation .dc_postprocess &&
-	// 	quotation .dc_postprocess (quotation);
-
-	quotation ?. dc_postprocess (quotation);
-	quotation .set_flag ("no_equation");
-	quotation .operand [1] = {};
-	quotation .set_flag ("subex");
-	asi .compex .str_uid = new_str_uid ("list");
-	quotation .reference (); // FIXME
-	as0 .dereference ();
-
-	quotation .comparative_computing_order =
-		current_stack .get_next_computing_order ();
-
-	asi .compex .comparative_computing_order =
-		current_stack .get_next_computing_order ();
-
-	current_stack .set (0, asi);
-}
-
-
-/** Limited convertion quotation to JS list. Obsoleted */
-function to_list_target_translation_semantics (operand, parent)
+/** Limited convertion quotation to JS list */
+function list_target_translation_semantics (operand, parent, opts)
 {
 	if (fsml_systate .need_full_substitution)
-		return '"[ ' + parent .str_uid + ' ]"';
+		return parent .str_uid;
+
+	if (opts .requested === 'target uid')
+		return parent .get_target_str_uid ();
 
 	const quotation = operand [0] .operand [0];
 
@@ -1531,6 +1495,32 @@ function to_list_target_translation_semantics (operand, parent)
 	current_stack = stacks_chain .pop ();
 
 	return text;
+}
+
+
+/** Limited convertion quotation to JS list */
+function to_list_semantics ()
+{
+	const as0       = current_stack .get (0);
+	const quotation = as0 .compex .dc ();
+	const asi       = new_stack_item ("list", "lst", quotation, "q>l");
+
+	quotation ?. dc_postprocess (quotation);
+	quotation .set_flag ("no_equation");
+	quotation .operand [1] = {}; // wtf?
+	quotation .set_flag ("subex"); // wtf?
+	asi .compex .set_flag ("subex");
+	asi .compex .str_uid = new_str_uid ("list");
+	quotation .reference (); // FIXME?
+	as0 .dereference ();
+
+	quotation .comparative_computing_order =
+		current_stack .get_next_computing_order ();
+
+	asi .compex .comparative_computing_order =
+		current_stack .get_next_computing_order ();
+
+	current_stack .set (0, asi);
 }
 
 
@@ -2201,4 +2191,3 @@ const tests = name =>
 
 
 export { get_fsml_instance };
-
