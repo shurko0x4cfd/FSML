@@ -882,10 +882,6 @@ var base_voc = {
 
 	"leaf":		new FsmlOperation ("leaf", ["nowalk"]),
 
-	// Why no_equation ?
-	// "quotation": new FsmlOperation ("quotation", ["nowalk", "no_equation"],
-	//		undefined, quotation_target_translation_semantics),
-
 	"quotation":	new FsmlOperation ("quotation", ["nowalk"], undefined,
 		quotation_target_translation_semantics),
 
