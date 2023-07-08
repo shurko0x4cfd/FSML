@@ -1,5 +1,5 @@
 
-/* FSML 0.5.5 */
+/* FSML 0.5.7 */
 
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichénko */
@@ -8,8 +8,8 @@
 /* @flow */
 
 
-import { cl } from 'raffinade';
-// import { cl } from '../node_modules/raffinade/JS/raffinade.js';
+import { cl, naturange } from 'raffinade';
+// import { cl, naturange } from '../node_modules/raffinade/JS/raffinade.js';
 
 
 /** Temp support to Firefox. Will be removed at time FF implement toReversed() */
@@ -866,7 +866,7 @@ FsmlOperation .prototype .check_flag =
 
 
 var base_voc = {
-//    "":    new FsmlOperation ("", [], _semantics, _target_translation_semantics),
+	// "":    new FsmlOperation ("", [], _semantics, _target_translation_semantics),
 
 	"license":  new FsmlOperation ("license", [],  license_semantics),
 	"bb":		new FsmlOperation ("bb", [], bb_semantics),
@@ -924,6 +924,22 @@ var base_voc = {
 	"identifier":	new FsmlOperation("identifier", ["nowalk"],
 		undefined, identifier_target_translation_semantics),
 
+	// Oneliner
+	// Treat an expression on tos as an anonymous procedure of the form:
+	// (vars in expression if any) => one expression with vars if any
+	// Oneliner can be assigned to a target identifier via !
+	// 12 34 + ol summer ! .js
+	// \ var summer = () => 12 + 34;
+	// 1 + ol increment ! .js
+	// \ var increment = (var_0) => var_0 + 1;
+	"ol": new FsmlOperation
+		(
+			"ol",
+			[],
+			undefined,
+			ol_target_translation_semantics
+		),
+
 	"ind":		new FsmlOperation ("ind", [], independent_semantics),
 	"i":		new FsmlOperation ("i",   [], independent_semantics),
 
@@ -953,6 +969,14 @@ var base_voc = {
 		list_target_translation_semantics
 	),
 
+	"naturange": new FsmlOperation
+	(
+		"naturange",
+		[],
+		undefined,
+		naturange_target_translation_semantics
+	),
+
 	"if" :		new FsmlOperation
 		("if",  ["no_equation"], if_semantics, if_target_translation_semantics),
 
@@ -974,6 +998,14 @@ var base_voc = {
 		("push", ["nopure",],
 			push_semantics, push_target_translation_semantics),
 
+	"1fold": new FsmlOperation
+	(
+		"1fold",
+		[],
+		undefined,
+		one_fold_target_translation_semantics
+	),
+
 	"time":		new FsmlOperation
 		("time", ["nopure", "nowalk"],
 			time_semantics, time_target_translation_semantics)
@@ -982,9 +1014,14 @@ var base_voc = {
 };
 
 
-["+", "-", "*", "/", "pow", ">"] .forEach (term =>
+["+", "-", "*", "/", "pow", ">", "naturange", "1fold"] .forEach (term =>
 	base_voc [term] .compilation_semantics =
 		trivial_binary_operation (base_voc [term]));
+
+
+["ol"] .forEach (term =>
+	base_voc [term] .compilation_semantics =
+		trivial_unary_operation (base_voc [term]));
 
 
 function open_quotation_semantics ()
@@ -1234,6 +1271,10 @@ Compex .prototype .get_target_str_uid =
 
 function create_binary_compex (operand_0, operand_1, operator)
 	{ return new Compex ([operand_0, operand_1], operator) }
+
+
+function create_unary_compex (operand_0, operator)
+	{ return new Compex ([operand_0], operator) }
 
 
 class Abstract_stack_item
@@ -1521,6 +1562,47 @@ function to_list_semantics ()
 		current_stack .get_next_computing_order ();
 
 	current_stack .set (0, asi);
+}
+
+
+function naturange_target_translation_semantics (operand, compex, opts)
+{
+	if (fsml_systate .need_full_substitution)
+		return compex .str_uid;
+
+	if (opts .requested === 'target uid')
+		return compex .get_target_str_uid ();
+
+	const starts_from = compex_to_infix_str (operand [1]);
+	const lim         = compex_to_infix_str (operand [0]);
+
+	return `() => naturange(${starts_from}, undefined, ${lim})`;
+}
+
+
+function one_fold_target_translation_semantics (operand, compex, opts)
+{
+	if (fsml_systate .need_full_substitution)
+		return compex .str_uid;
+
+	if (opts .requested === 'target uid')
+		return compex .get_target_str_uid ();
+
+	const iterable = compex_to_infix_str (operand [0]);
+	const folder   = compex_to_infix_str (operand [1]);
+	// For get unquoted string, compex_to_infix_str (operand [1])
+	// return quoted string
+	// const folder   = operand [1] .operand [0];
+
+	const padding = indent_str .repeat (size_indent);
+
+	return `														\
+	${cr}${padding}(() => {											\
+		${cr}${padding .repeat (2)}let acc = 1;						\
+		${cr}${padding .repeat (2)}for (let i of (${iterable})())	\
+			${cr}${padding .repeat (3)}acc = ${folder}(i, acc);		\
+		${cr}${padding .repeat (2)}return acc;						\
+	${cr}${padding}})()`;
 }
 
 
@@ -1854,6 +1936,20 @@ function trivial_binary_operation (operation_in_base_voc)
 	}
 }
 
+function trivial_unary_operation (operation_in_base_voc)
+{
+	return function ()
+	{
+		const as0 = current_stack .get (0);
+
+		current_stack .to_next_computing_order ();
+
+		as0 .compex =
+			create_unary_compex (as0 .compex,
+				operation_in_base_voc);
+	}
+}
+
 
 function plus_target_translation_semantics (operand)
 {
@@ -1983,6 +2079,8 @@ function exclamark_target_translation_semantics (operand)
 }
 
 
+// Currently is just a move quoted string from leaf on tos
+// as unquoted string in new leaf i.e. refuse quotes
 function fetch_semantics ()
 {
 	var as0 = current_stack .get (0);
@@ -2014,6 +2112,39 @@ function id_semantics (operand)
 
 function identifier_target_translation_semantics (operand)
 	{ return operand [0] }
+
+
+// Never returns identifier, only target text
+function ol_target_translation_semantics (operand)
+{
+	operand = operand [0];
+	const varlist	= variables_digest (operand) .filter (i => i) .join (", ");
+	const text		= compex_to_infix_str (operand);
+	return "(" + varlist + ") => " + text;
+}
+
+
+function variables_digest (compex, varlist = [])
+{
+	const operator = compex .operator;
+
+	if (operator === base_voc ["var"])
+	{
+		const stack_index = compex .operand [0];
+		varlist [stack_index] = "var_" + stack_index;
+		return varlist;
+	}
+
+	if (operator .check_flag ("nowalk") ||
+		operator === base_voc ["leaf"] ||
+			operator === base_voc ["quotation"])
+				return;
+
+	for (let i = compex .operands_offset;  i < compex .operand .length; i++)
+		variables_digest (compex .operand [i], varlist);
+
+	return varlist;
+}
 
 
 function independent_semantics ()
@@ -2091,6 +2222,7 @@ function help_semantics ()
 		${cr}asg - abstract semantics graph\
 		${cr}term - like Forth word, but term strictly can't be subject of parsing\
 		${cr}tos - top of stack - the top of the stack or the expression on the top of the stack\
+		${cr}target identifier - identifier of the target language\
 		${cr}supplier-object - ?\
 		${cr}\
 		${cr}Interesting just for first but not practically significant terms:\
@@ -2104,15 +2236,18 @@ function help_semantics ()
 		${cr}.eval - transpile to JS, evaluate if environment support this and\
 		${cr}type the evaluation result as a evaluated stack\
 		${cr}! (string any -- variable-id) - 'hold' - hold in variable (without explicit declaring)\
-		${cr}@ (string -- variable-id) - 'fetch' - convert variable name to asg-node variable-id\
-		${cr}include the asg node in subsequent expressions\
+		${cr}@ (string -- unquoted-string) - 'fetch' - refuse quotes in string\
+		${cr}id - less or more the same as @\
+		${cr}naturange - <end> <start> naturange - Python-like range with step 1. This is JS Generator\
+		${cr}1fold - <iterable> <function name> 1fold - functional reduce with start value = 1\
 		${cr}if (quotation quotation condition -- supplier-object) - if statement\
 		${cr}exactly as in the Factor: https://docs.factorcode.org/content/word-if,kernel.html\
 		${cr}for example text: true [ 'will true' ] [ 'will false' ] if .eval dp\
 		${cr}leave text: 'will true' on tos\
-		${cr}while - less or more like Factor's 'naive' loop:\
+		${cr}while - less or more like Factor's 'loop' word:\
 		${cr}https://docs.factorcode.org/content/word-loop,kernel.html\
 		${cr}list ( -- list-id) - new empty array/list of target language, currently is only JS\
+		${cr}q>l - <quotation> q>l - converting a quotation to a JS list/array whenever possible\
 		${cr}push (any list-id -- list-id) - append tos to list\
 	`);
 }
@@ -2183,6 +2318,7 @@ const tests = name =>
 	({
 		'factorial': 'dup [ 1 [ over * over 1 - ] while swap dp ] [ 0 ] if .eval',
 		'factorial-12': '12 factorial .test',
+		'functorial-12': '* ol mul ! 12 dup [ 1 naturange mul id 1fold ] [ 0 ] if .eval',
 		'apply-summ': '12 34 [ [ + ] apply ] apply',
 		'hold-fetch': 'factorial .test asd ! asd @ .js .eval' // ! isnt do .js
 	})
