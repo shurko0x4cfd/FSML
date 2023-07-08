@@ -1,5 +1,5 @@
 
-/* FSML 0.5.8 */
+/* FSML 0.5.9 */
 
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichénko */
@@ -8,8 +8,8 @@
 /* @flow */
 
 
-// import { cl, naturange } from 'raffinade';
-import { cl, naturange } from '../node_modules/raffinade/JS/raffinade.js';
+// import { cl } from 'raffinade';
+import { cl } from '../node_modules/raffinade/JS/raffinade.js';
 
 
 /** Temp support to Firefox. Will be removed at time FF implement toReversed() */
@@ -1576,7 +1576,14 @@ function naturange_target_translation_semantics (operand, compex, opts)
 	const starts_from = compex_to_infix_str (operand [1]);
 	const lim         = compex_to_infix_str (operand [0]);
 
-	return `() => naturange(${starts_from}, undefined, ${lim})`;
+	// return `() => naturange(${starts_from}, undefined, ${lim})`;
+
+	return `\() =>										${cr}\
+		(function* (c = 1, retval, lim = -1) {			${cr}\
+			if (c < 0) { return retval }				${cr}\
+			while (lim < 0 || c <= lim) { yield c++ }	${cr}\
+			return retval;								${cr}\
+		})(${starts_from}, undefined, ${lim})`
 }
 
 
@@ -1596,13 +1603,13 @@ function one_fold_target_translation_semantics (operand, compex, opts)
 
 	const padding = indent_str .repeat (size_indent);
 
-	return `														\
-	${cr}${padding}(() => {											\
-		${cr}${padding .repeat (2)}let acc = 1;						\
-		${cr}${padding .repeat (2)}for (let i of (${iterable})())	\
-			${cr}${padding .repeat (3)}acc = ${folder}(i, acc);		\
-		${cr}${padding .repeat (2)}return acc;						\
-	${cr}${padding}})()`;
+	return `															\
+		${cr}${padding}(() => {											\
+			${cr}${padding .repeat (2)}let acc = 1;						\
+			${cr}${padding .repeat (2)}for (let i of (${iterable})())	\
+				${cr}${padding .repeat (3)}acc = ${folder}(i, acc);		\
+			${cr}${padding .repeat (2)}return acc;						\
+		${cr}${padding}})()`;
 }
 
 
