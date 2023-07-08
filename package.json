@@ -1,6 +1,6 @@
 {
 	"name": "fsmlang",
-	"version": "0.5.7",
+	"version": "0.5.8",
 	"author": "Alexander (Shúrko) Stadnichénko",
 	"license": "BSD-2-Clause",
 	"description": "FSML - homoiconic postfix concatenative programming language. JS implementation",
@@ -31,7 +31,7 @@
 	},
 	"homepage": "https://github.com/shurko0x4cfd/FSML#readme",
 	"dependencies": {
-		"raffinade": "^0.0.17"
+		"raffinade": ">=0.0.18"
 	},
 	"devDependencies": {
 		"flow-bin": "^0.209.0"
