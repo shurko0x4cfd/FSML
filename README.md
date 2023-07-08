@@ -26,7 +26,7 @@ Features:
 Command line starts with '> ' or 'fsml > ' or 'fsml> '. Almost no error handling yet. On error system often crush and require reload of page. Open browsers console to track it.
 
 
-Example of defining an anonymous function and assigning it to the variable 'mul' :
+Example of defining an anonymous procedure and assigning it to the variable 'mul' :
 
 ```factor
 * ol mul !    .js
