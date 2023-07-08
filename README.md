@@ -26,7 +26,24 @@ Features:
 Command line starts with '> ' or 'fsml > ' or 'fsml> '. Almost no error handling yet. On error system often crush and require reload of page. Open browsers console to track it.
 
 
-Example of computing factorial of 12 with 'if' and 'while' :
+Example of defining an anonymous function and assigning it to the variable 'mul' :
+
+```factor
+* ol mul !    .js
+
+\ var mul = (var_0, var_1) => var_1 * var_0;
+```
+
+Example of computing factorial of 12 in functional manner with 'if', 'naturange' and '1fold' :
+
+```factor
+* ol mul !
+12 dup [ 1 naturange mul id 1fold ] [ 0 ] if .eval
+
+evaluated stack: [479001600]
+```
+
+Example of computing factorial of 12 in procedural manner with 'if' and 'while' :
 
 ```factor
 12 dup [ 1 [ over * over 1 - ] while swap dp ] [ 0 ] if .eval
