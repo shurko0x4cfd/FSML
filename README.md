@@ -28,7 +28,7 @@ Command line starts with '> ' or 'fsml > ' or 'fsml> '. Almost no error handling
 
 Example of defining an anonymous procedure and assigning it to the variable 'mul' :
 
-```factor
+```forth
 * ol mul !    .js
 
 \ var mul = (var_0, var_1) => var_1 * var_0;

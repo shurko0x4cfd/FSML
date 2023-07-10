@@ -1,6 +1,6 @@
 {
 	"name": "fsmlang",
-	"version": "0.5.9",
+	"version": "0.5.10",
 	"author": "Alexander (Shúrko) Stadnichénko",
 	"license": "BSD-2-Clause",
 	"description": "FSML - homoiconic postfix concatenative programming language. JS implementation",

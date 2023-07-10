@@ -1,5 +1,5 @@
 
-/* FSML 0.5.9 */
+/* FSML 0.5.10 */
 
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichénko */
@@ -994,9 +994,14 @@ var base_voc = {
 	/*"until": new FsmlOperation ("until", [], until_semantics, until_target_translation_semantics),*/
 
 	// push_target_translation_semantics
-	"push":		new FsmlOperation
-		("push", ["nopure",],
-			push_semantics, push_target_translation_semantics),
+	"push":	new FsmlOperation
+	(
+		"push",
+		// ["nopure",],
+		[],
+		push_semantics,
+		push_target_translation_semantics
+	),
 
 	"1fold": new FsmlOperation
 	(
@@ -1764,8 +1769,16 @@ function if_target_translation_semantics (operand, if_object)
 
 	const arg_names_for_quotation = operand .slice (3) .map (item =>
 		(
+			// If var and if predefined name is presented, retun predefined name
 			item .operator === base_voc ["var"] &&
 				current_stack .predefined_argument_names [item .operand [0]]
+		)
+		||
+		(
+			// If var and if predefined name is not presented, retun name var_ + index
+			// vhere var_ + index nust be among argunents in wrapper (argunents) => ...
+			item .operator === base_voc ["var"] &&
+				"var_" + item .operand [0]
 		)
 		|| item .get_target_str_uid ());
 
@@ -1889,9 +1902,16 @@ function while_target_translation_semantics (operand, while_object)
 	const condition_str_uid = while_object .item_names [0];
 
 	const arg_names_for_quotation = operand .slice (1) .map (item =>
-		item .operator === base_voc ["var"] ?
-			current_stack .predefined_argument_names [item .operand [0]] ||
-				item .get_target_str_uid () : item .get_target_str_uid ());
+		(
+			item .operator === base_voc ["var"] &&
+				current_stack .predefined_argument_names [item .operand [0]]
+		)
+		||
+		(
+			item .operator === base_voc ["var"] &&
+				"var_" + item .operand [0]
+		)
+		|| item .get_target_str_uid ());
 
 	const new_indent = current_stack .indent_size + size_indent;
 
@@ -1976,10 +1996,20 @@ function minus_target_translation_semantics (operand)
 	if (o1 .operator === base_voc ["leaf"] && o1 .operand [0] < 0)
 		var r_exp_parenthesis_if_any = {"left" : "(", "right" : ")"};
 
+	const rightside = compex_to_infix_str (o1);
+
+	// Bad solve but...
+	const need_not_parenthesis = ! rightside .match (/[\+\-\*\/\>\<]+/g);
+	need_not_parenthesis &&
+		(r_exp_parenthesis_if_any = {"left" : "", "right" : ""});
+
+	// 12 - (-34) ?
+
 	return compex_to_infix_str (o0)
 		+ " - "
 		+ r_exp_parenthesis_if_any .left
-		+ compex_to_infix_str (o1)
+		// + compex_to_infix_str (o1)
+		+ rightside
 		+ r_exp_parenthesis_if_any .right;
 }
 
@@ -2126,7 +2156,7 @@ function ol_target_translation_semantics (operand)
 {
 	operand = operand [0];
 	const varlist	= variables_digest (operand) .filter (i => i) .join (", ");
-	const text		= compex_to_infix_str (operand);
+	const text		= compex_to_infix_str (operand, { requested: "text" });
 	return "(" + varlist + ") => " + text;
 }
 
@@ -2139,6 +2169,7 @@ function variables_digest (compex, varlist = [])
 	{
 		const stack_index = compex .operand [0];
 		varlist [stack_index] = "var_" + stack_index;
+
 		return varlist;
 	}
 
@@ -2295,7 +2326,7 @@ function push_semantics ()
 		new_stack_item ("Native", "Nat", undefined, "push");
 
 	push_operation .compex .operand = operands;
-	push_operation .compex .set_flag ('subex');
+	// push_operation .compex .set_flag ('subex');
 
 	push_operation .compex .comparative_computing_order =
 		current_stack .get_next_computing_order ();
@@ -2312,8 +2343,11 @@ function push_target_translation_semantics (operand, cpx, opts = {})
 
 	if (fsml_systate .need_full_substitution)
 		return list_name;
-	else
-		return `(${list_name} .push (${pushee}), ${list_name})`;
+
+	if (opts .requested === 'target uid')
+		return list_name;
+
+	return `(${list_name} .push (${pushee}), ${list_name})`;
 }
 
 
