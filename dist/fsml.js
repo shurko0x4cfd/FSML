@@ -5,7 +5,7 @@
 /* Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichénko */
 /* License : BSD-2-Clause */
 
-/* @flow */
+/*  */
 
 
 import { cl, u } from 'raffinade';
@@ -19,7 +19,7 @@ import { cl, u } from 'raffinade';
 		Array.prototype,
 		'toReversed',
 		{
-			value: function (this: Array<any>): Array<any>
+			value: function ()
 			{
 				return this .slice () .reverse ();
 			},
@@ -49,7 +49,7 @@ let output_buffer = '';
  * @arg		{string} text	Append id to output
  * @return	{string}		Output buffer
  */
-const default_fsmlog_type = (text: string): string  =>
+const default_fsmlog_type = (text)  =>
 	output_buffer += text;
 
 /* And set it as default until overriden */
@@ -107,7 +107,7 @@ const js_operation_groups_precedence =
 /* Now and below senseless short names like f, g, h for function factored out
    Immediately before it user */
 
-const f = (acc: Object, arrg: Array<string>, idx: number) =>
+const f = (acc, arrg, idx) =>
 	(arrg .forEach (itm => acc [itm] = idx), acc);
 
 /* Convert to object { operation: precedence, ... } */
@@ -125,18 +125,18 @@ js_operation_precedence .leaf = 100;
  */
 const new_str_uid =
 (
-	(uids: Object = {}) =>
-		(prefix: string) =>
+	(uids = {}) =>
+		(prefix) =>
 			(!(prefix in uids) && (uids [prefix] = 0),
 				prefix + "_" + uids [prefix] ++)
 )();
 
 
 class Abstract_stack {
-	this: Abstract_stack;
-	dc: Function = deep_copy;
+	this;
+	dc = deep_copy;
 
-	dc_postprocess = function (obj: Object): Object
+	dc_postprocess = function (obj)
 	{
 		obj.str_uid = new_str_uid ("quotation");
 		obj.actual_target_names = false;
@@ -144,8 +144,8 @@ class Abstract_stack {
 		return obj;
 	}
 
-	str_uid: string = new_str_uid ("quotation");
-	flags: Array<string> = [];
+	str_uid = new_str_uid ("quotation");
+	flags = [];
 
 	// When performed deep copy of quotation we need to reset cached identifiers
 	// of target language in copy because old names belong to original quotation
@@ -158,18 +158,18 @@ class Abstract_stack {
 	pseudo_order = 0;
 
 	tail_starts_from = 0; // Even if container presented ?
-	container: Array<Object> = [];
-	assignments: Array<Abstract_stack_item> = [];
+	container = [];
+	assignments = [];
 
-	_need_id_substitution: Compex;
+	_need_id_substitution;
 	isloop = false;
-	ordered_subexpressions: Array<any> = [];
+	ordered_subexpressions = [];
 
 	// [ "str", "str", ... "str" ] Precalculated function argument names
 	// or top stack values at loop start if any
-	predefined_argument_names: Array<string> = [];
-	item_names: Array<string> = [];
-	another_item_names: Array<string> = [];
+	predefined_argument_names = [];
+	item_names = [];
+	another_item_names = [];
 
 	kind_of_next_compilation = "no-incomings";
 
@@ -179,28 +179,28 @@ class Abstract_stack {
 	aliastatement = "";
 	indent_size = 0;
 	return_statement = "";
-	return_items: Array<any> = [];
-	evalresult: Array<any> = [];
-	uids_already_in_equation_left: Array<any> = [];
-	str_uids_to_rename: Array<any> = [];
+	return_items = [];
+	evalresult = [];
+	uids_already_in_equation_left = [];
+	str_uids_to_rename = [];
 
-	depth = (): number => { return this .container .length; }
+	depth = () => { return this .container .length; }
 
-	get_utmost_computing_order = (): number => this .utmost_computing_order;
-	items_digest = (): Array<Object> => this .container .slice ();
-	push = (item: Abstract_stack_item): number => this .container .push (item);
-	get_next_computing_order = (): number => ++this .utmost_computing_order;
-	to_next_computing_order = (): void => { ++this .utmost_computing_order };
-	get_next_pseudo_order = (): number => ++this .pseudo_order +this .utmost_computing_order;
-	reset_pseudo_order = (): void => { this .pseudo_order = 0 }
+	get_utmost_computing_order = () => this .utmost_computing_order;
+	items_digest = () => this .container .slice ();
+	push = (item) => this .container .push (item);
+	get_next_computing_order = () => ++this .utmost_computing_order;
+	to_next_computing_order = () => { ++this .utmost_computing_order };
+	get_next_pseudo_order = () => ++this .pseudo_order +this .utmost_computing_order;
+	reset_pseudo_order = () => { this .pseudo_order = 0 }
 
-	set_flag = (flag: string): void =>
+	set_flag = (flag) =>
 		{ (flag in this .flags) || (this .flags .push (flag)) };
 
-	check_flag = (flag: string): boolean => this .flags .includes (flag);
+	check_flag = (flag) => this .flags .includes (flag);
 
 
-	extend_stack_if_necessary = (index: number): void =>
+	extend_stack_if_necessary = (index) =>
 	{
 		let c = this .container,
 			l = c.length;
@@ -214,7 +214,7 @@ class Abstract_stack {
 	};
 
 
-	materialize_tail = (lack: number): Array<Abstract_stack_item> =>
+	materialize_tail = (lack) =>
 	{
 		var tail = [];
 
@@ -226,7 +226,7 @@ class Abstract_stack {
 	}
 
 
-	get_quotation_item = (): Abstract_stack_item =>
+	get_quotation_item = () =>
 	{
 		const asi    = new Abstract_stack_item (),
 		      compex = asi .compex;
@@ -256,7 +256,7 @@ class Abstract_stack {
 	*/
 
 
-	pop = (): Abstract_stack_item =>
+	pop = () =>
 	{
 		const index = 0;
 		this .extend_stack_if_necessary (index);
@@ -266,7 +266,7 @@ class Abstract_stack {
 	};
 
 
-	get = (index: number): Abstract_stack_item =>
+	get = (index) =>
 	{
 		this .extend_stack_if_necessary (index);
 		var c = this .container;
@@ -276,7 +276,7 @@ class Abstract_stack {
 	};
 
 
-	set = (index: number, value: Abstract_stack_item): void =>
+	set = (index, value) =>
 	{
 		this .extend_stack_if_necessary (index);
 		var c = this .container;
@@ -285,10 +285,10 @@ class Abstract_stack {
 	};
 
 
-	need_id_substitution = (): Compex => this ._need_id_substitution;
+	need_id_substitution = () => this ._need_id_substitution;
 
 
-	type_stack = (): Array<any> =>
+	type_stack = () =>
 	{
 		const self = this;
 		fsml_systate .need_full_substitution = true;
@@ -308,7 +308,7 @@ class Abstract_stack {
 	};
 
 
-	translate_to_js = (): void =>
+	translate_to_js = () =>
 	{
 		const self = this;
 		const indent_string =  indent_str .repeat (current_stack .indent_size);
@@ -333,7 +333,7 @@ class Abstract_stack {
 		this .target_text = "";
 		let specr = "\n"; // <- For avoid first cr. Not in use
 
-		function process_expression (item: Array<any>, index: number)
+		function process_expression (item, index)
 		{
 			var compex = item [0];
 			var syn_list = item [1];
@@ -442,20 +442,20 @@ class Abstract_stack {
 	};
 
 
-	get_target_text = (): string => this .target_text;
+	get_target_text = () => this .target_text;
 
 
-	get_return_items = (): Array<string> =>
+	get_return_items = () =>
 		this .return_items .map (compex => compex .get_target_str_uid ());
 
 
-	get_return_statement = (): string =>
+	get_return_statement = () =>
 		"return [ "
 		+ this .get_return_items () .join (", ")
 		+ " ];";
 
 
-	order_subexpressions = (): void =>
+	order_subexpressions = () =>
 	{
 		const self = this;
 		this .ordered_subexpressions = [];
@@ -475,7 +475,7 @@ class Abstract_stack {
 
 
 	_order_subexpressions =
-		(compex: Compex, item: Abstract_stack_item, position: number): void =>
+		(compex, item, position) =>
 	{
 		const operator = compex .operator;
 
@@ -508,7 +508,7 @@ class Abstract_stack {
 
 		if (is_stack_item && !like_subex)
 		{
-			let order: number;
+			let order;
 
 			if (compex .comparative_computing_order !== undefined)
 				order = compex .comparative_computing_order;
@@ -574,7 +574,7 @@ const get_fsml_instance = () /*: Object */ =>
 
 /** Perform deep copy of one top stack item. Quite obsoleted */
 
-function deep_copy (this: any): any
+function deep_copy ()
 {
 	const new_object = new this .constructor ();
 
@@ -608,9 +608,9 @@ function deep_copy (this: any): any
 
 
 function translate_empty_quotation (
-	indent_size: number,
-	item_names: Array<string>,
-	another_item_names: Array<Array<string>>)
+	indent_size,
+	item_names,
+	another_item_names)
 {
 	var target_text = "";
 	var var_declarations = "";
@@ -665,9 +665,9 @@ function translate_empty_quotation (
 
 function append_to_order
 (
-	order: number,
-	compex: Compex,
-	_synonymous: Array<string>
+	order,
+	compex,
+	_synonymous
 )
 {
 	const ordered_subexpressions = current_stack .ordered_subexpressions;
@@ -684,7 +684,7 @@ function append_to_order
 }
 
 
-function synonymous (compex: Compex): Array<string>
+function synonymous (compex)
 {
 	let synonymous = [];
 	const stack_items = current_stack .items_digest ();
@@ -712,7 +712,7 @@ function synonymous (compex: Compex): Array<string>
 }
 
 
-function fsml_eval (fsml_raw_in: string)
+function fsml_eval (fsml_raw_in)
 {
 	if (fsml_systate .done)
 		return { text: 'Done', done: true };
@@ -746,7 +746,7 @@ function type_stack ()
 	{ return current_stack .type_stack () }
 
 
-function alt_split (s: string): Array<Array<string>>  // <-- Draft
+function alt_split (s)  // <-- Draft
 {
 	var result = [];
 	var first, last, quotype, _substring = "";
@@ -793,10 +793,10 @@ function alt_split (s: string): Array<Array<string>>  // <-- Draft
 }
 
 
-function compile_term (term: string, quotype: string): void
+function compile_term (term, quotype)
 {
-	let val: any;
-	let as0: Abstract_stack_item;
+	let val;
+	let as0;
 
 	if (!quotype && !term .trim ())
 		fsmlog_type ("Warning: strange non-quoted empty term income...");
@@ -834,17 +834,17 @@ function compile_term (term: string, quotype: string): void
 
 class FsmlOperation {
 
-	true_name: string;
-	flags: Array<string>;
-	compilation_semantics: Function;
-	translate_to_target: Function;
+	true_name;
+	flags;
+	compilation_semantics;
+	translate_to_target;
 
 	constructor
 	(
-		true_name: string,
-		flags: Array<string>,
-		compilation_semantics: ?Function,
-		target_translation_semantics: ?Function
+		true_name,
+		flags,
+		compilation_semantics,
+		target_translation_semantics
 	)
 	{
 		this .true_name = true_name;
@@ -854,14 +854,13 @@ class FsmlOperation {
 	}
 
 
-	check_flag = (flag: string): boolean => this .flags .includes (flag);
+	check_flag = (flag) => this .flags .includes (flag);
 }
 
 
-type base_voc_line = { [string]: FsmlOperation };
 
 
-const base_voc: base_voc_line =
+const base_voc =
 {
 	// "":    new FsmlOperation ("", [], _semantics, _target_translation_semantics),
 
@@ -1142,7 +1141,7 @@ function red_semantics ()
 }
 
 
-function quotation_target_translation_semantics (operand: Array<any>)
+function quotation_target_translation_semantics (operand)
 {
 	var translate_kind = operand [1];
 
@@ -1167,18 +1166,18 @@ function quotation_target_translation_semantics (operand: Array<any>)
 
 class Compex
 {
-	operator: FsmlOperation;
-	operand: Array<any>;
+	operator;
+	operand;
 
-	constructor (operands: Array<any>, operator: FsmlOperation)
+	constructor (operands, operator)
 	{
 		this .operand  = operands;
 		this .operator = operator;
 	}
 
-	dc: Function = deep_copy;
+	dc = deep_copy;
 
-	dc_postprocess = function (this: Compex, obj: Compex): Compex
+	dc_postprocess = function ( obj)
 	{
 		// if str_uid is charact of rels must be the same for Q
 		obj .str_uid = new_str_uid ("compex");
@@ -1188,33 +1187,33 @@ class Compex
 	}
 
 	frozen = false;
-	flags: Array<string> = [];
+	flags = [];
 	// immaname
-	str_uid: string = new_str_uid ("compex");
-	target_str_uid: string = "";
+	str_uid = new_str_uid ("compex");
+	target_str_uid = "";
 	operands_offset = 0;
 	reference_count = 1;
-	comparative_computing_order: number = current_stack .utmost_computing_order;
+	comparative_computing_order = current_stack .utmost_computing_order;
 	// comparative_computing_order = // ?
 	//		current_stack .get_next_computing_order ();
 	type     = "Expression";
 	shortype = "Exp";
 	quotype = "";
-	set_target_str_uid: ?Function;
-	add_target_str_uid: ?Function;
-	item_names_count: number;
-	item_names: Array<string>;
-	another_item_names: Array<Array<string>>;
+	set_target_str_uid;
+	add_target_str_uid;
+	item_names_count;
+	item_names;
+	another_item_names;
 
 
-	check_flag = (flag: string): boolean => this .flags .includes (flag);
+	check_flag = (flag) => this .flags .includes (flag);
 
 
-	set_flag = (flag: string): void =>
+	set_flag = (flag) =>
 		{ (flag in this .flags) || (this .flags .push (flag)) };
 
 
-	dereference = (): void =>
+	dereference = () =>
 	{
 		if (this .reference_count === 0)
 		{
@@ -1231,7 +1230,7 @@ class Compex
 	}
 
 
-	dereference_operands = (): void =>
+	dereference_operands = () =>
 	{
 		this .frozen ||
 			this .operand .forEach (item =>
@@ -1239,10 +1238,10 @@ class Compex
 	}
 
 
-	freeze = (): void => { this .frozen = true }
+	freeze = () => { this .frozen = true }
 
 
-	unfreeze = (): void =>
+	unfreeze = () =>
 	{
 		this .frozen = false;
 
@@ -1254,7 +1253,7 @@ class Compex
 	}
 
 
-	reference = (): void =>
+	reference = () =>
 	{
 		this .reference_count += 1;
 
@@ -1269,11 +1268,11 @@ class Compex
 	}
 
 	/* Not in use now */
-	reference_no_subex = (): void =>
+	reference_no_subex = () =>
 		{ this .reference_count += 1 }
 
 
-	get_target_str_uid = function (this: Compex): string
+	get_target_str_uid = function ()
 	{
 		return this .target_str_uid ||= new_str_uid ("subex");
 	}
@@ -1282,41 +1281,41 @@ class Compex
 
 const create_binary_compex =
 (
-	operand_0: any,
-	operand_1: any,
-	operator: FsmlOperation
+	operand_0,
+	operand_1,
+	operator
 ) =>
 	new Compex([operand_0, operand_1], operator);
 
 
 const create_unary_compex =
 (
-	operand_0: any,
-	operator: FsmlOperation
+	operand_0,
+	operator
 ) =>
 	new Compex ([operand_0], operator);
 
 
 class Abstract_stack_item
 {
-	dc: Function = deep_copy;
+	dc = deep_copy;
 
 	dc_postprocess =
-		function (obj: Abstract_stack_item): Abstract_stack_item
+		function (obj)
 		{
 			obj .str_uid = new_str_uid ("stackitem");
 			return obj;
 		}
 
-	str_uid: string = new_str_uid ("stackitem");
+	str_uid = new_str_uid ("stackitem");
 	reference_count = 1;
-	compex: Compex = create_binary_compex (u, u, new FsmlOperation ("", []));
+	compex = create_binary_compex (u, u, new FsmlOperation ("", []));
 
 
-	reference = (): void => { this .reference_count += 1 };
+	reference = () => { this .reference_count += 1 };
 
 
-	dereference = (): void =>
+	dereference = () =>
 	{
 		if (this .reference_count === 0)
 		{
@@ -1334,10 +1333,10 @@ class Abstract_stack_item
 
 function new_stack_item
 (
-	type: string,
-	shortype: string,
-	value: any,
-	operation: string
+	type,
+	shortype,
+	value,
+	operation
 )
 {
 	const asi = new Abstract_stack_item ();
@@ -1351,15 +1350,15 @@ function new_stack_item
 }
 
 
-function compilit (type: string, shortype: string, value: any)
+function compilit (type, shortype, value)
 	{ current_stack .push (new_stack_item (type, shortype, value, "leaf")) }
 
 
-function new_var_item (var_index: number)
+function new_var_item (var_index)
 	{ return new_stack_item ("Variable", "var", var_index, "var") }
 
 
-function compex_to_infix_str (compex: Compex, opts: Object = {}): string
+function compex_to_infix_str (compex, opts = {})
 {
 	var operator = compex .operator;
 
@@ -1414,7 +1413,7 @@ function compex_to_infix_str (compex: Compex, opts: Object = {}): string
 }
 
 
-function _substitute_variables (compex: Compex, p: Compex, n: number)
+function _substitute_variables (compex, p, n)
 {
 	var operator = compex .operator;
 
@@ -1479,7 +1478,7 @@ function _substitute_variables (compex: Compex, p: Compex, n: number)
 }
 
 
-function substitute_variables (item: Abstract_stack_item)
+function substitute_variables (item)
 {
 	// const pseudo_compex = { "operand": [] };
 	const pseudo_compex = new Compex ([], new FsmlOperation ("", []));
@@ -1543,9 +1542,9 @@ function empty_list_semantics ()
 /** Limited convertion quotation to JS list */
 function list_target_translation_semantics
 (
-	operand: Array<any>,
-	parent: Compex,
-	opts: Object
+	operand,
+	parent,
+	opts
 )
 {
 	if (fsml_systate .need_full_substitution)
@@ -1599,9 +1598,9 @@ function to_list_semantics ()
 
 function naturange_target_translation_semantics
 (
-	operand: Array<any>,
-	compex: Compex,
-	opts: Object
+	operand,
+	compex,
+	opts
 )
 {
 	if (fsml_systate .need_full_substitution)
@@ -1626,9 +1625,9 @@ function naturange_target_translation_semantics
 
 function one_fold_target_translation_semantics
 (
-	operand: Array<any>,
-	compex: Compex,
-	opts: Object
+	operand,
+	compex,
+	opts
 )
 {
 	if (fsml_systate .need_full_substitution)
@@ -1657,9 +1656,9 @@ function one_fold_target_translation_semantics
 
 class If_compex extends Compex
 {
-	item_names_count: number;
-	item_names: Array<string>;
-	another_item_names: Array<Array<string>>;
+	item_names_count;
+	item_names;
+	another_item_names;
 
 }
 
@@ -1734,17 +1733,17 @@ function if_semantics ()
 		if_compex .another_item_names .push ([]);
 	}
 
-	function get_target_str_uid (this: Compex)
+	function get_target_str_uid ()
 	{
 		return this .operand [1] .item_names [this .operand [0]];
 	}
 
-	function set_target_str_uid (this: Compex, obtrusive_id: string)
+	function set_target_str_uid ( obtrusive_id)
 	{
 		this .operand [1] .item_names [this .operand [0]] = obtrusive_id;
 	}
 
-	function add_target_str_uid (this: Compex, obtrusive_id: string)
+	function add_target_str_uid ( obtrusive_id)
 	{
 		this .operand [1] .another_item_names [this .operand [0]]
 			.push (obtrusive_id);
@@ -1758,7 +1757,7 @@ function if_semantics ()
 
 		/* temp */
 		item .compex .dc =
-			function (this: If_compex) { return this };
+			function () { return this };
 		/* temp */
 
 		item .compex .operands_offset = 1;
@@ -1778,10 +1777,10 @@ function if_semantics ()
 
 function quot_to_js
 (
-	obj: Object,
-	quot: Abstract_stack,
-	arg_names_for_quotation: Array<string>,
-	new_indent: number
+	obj,
+	quot,
+	arg_names_for_quotation,
+	new_indent
 )
 {
 	const transpiled = { nested_text: "", rename_str_uids: [] };
@@ -1818,7 +1817,7 @@ function quot_to_js
 }
 
 
-function if_target_translation_semantics (operand: Array<any>, if_object: If_compex)
+function if_target_translation_semantics (operand, if_object)
 {
 	const condition_str_uid = operand [2] .get_target_str_uid ();
 
@@ -1839,7 +1838,7 @@ function if_target_translation_semantics (operand: Array<any>, if_object: If_com
 
 	const new_indent = current_stack .indent_size + size_indent;
 
-	const nested_text = (idx: number): string =>
+	const nested_text = (idx) =>
 			quot_to_js (if_object, operand [idx] .operand [0], arg_names_for_quotation,
 				new_indent) .nested_text;
 
@@ -1855,7 +1854,7 @@ function if_target_translation_semantics (operand: Array<any>, if_object: If_com
 }
 
 
-function if_supplier_target_translation_semantics (operand: Array<any>)
+function if_supplier_target_translation_semantics (operand)
 {
 	if (fsml_systate .need_full_substitution)
 		return "if_" +operand [0];
@@ -1920,13 +1919,13 @@ function while_semantics ()
 	)
 		while_object .another_item_names .push ([]);
 
-	function get_target_str_uid (this: Compex)
+	function get_target_str_uid ()
 		{ return this .operand [1] .item_names [this .operand [0]] }
 
-	function set_target_str_uid (this: Compex, obtrusive_id: string)
+	function set_target_str_uid ( obtrusive_id)
 		{ this .operand [1] .item_names [this .operand [0]] = obtrusive_id }
 
-	function add_target_str_uid (this: Compex, obtrusive_id: string)
+	function add_target_str_uid ( obtrusive_id)
 	{
 		this .operand [1]
 			.another_item_names [this .operand [0]] .push (obtrusive_id)
@@ -1941,7 +1940,7 @@ function while_semantics ()
 				"while_supplier", undefined, "while_supplier");
 
 		/* temp */
-		item .compex .dc = function (this: Compex) { return this; }
+		item .compex .dc = function () { return this; }
 		/* temp */
 
 		item .compex .operands_offset = 1;
@@ -1959,7 +1958,7 @@ function while_semantics ()
 }
 
 
-function while_target_translation_semantics (operand: Array<any>, while_object: Compex)
+function while_target_translation_semantics (operand, while_object)
 {
 	const condition_str_uid = while_object .item_names [0];
 
@@ -1994,7 +1993,7 @@ function while_target_translation_semantics (operand: Array<any>, while_object: 
 }
 
 
-function while_supplier_target_translation_semantics (operand: Array<any>)
+function while_supplier_target_translation_semantics (operand)
 {
 	if (fsml_systate .need_full_substitution)
 		return "while_" +operand [0];
@@ -2003,7 +2002,7 @@ function while_supplier_target_translation_semantics (operand: Array<any>)
 }
 
 
-function trivial_binary_operation (operation_in_base_voc: FsmlOperation)
+function trivial_binary_operation (operation_in_base_voc)
 {
 	return function ()
 	{
@@ -2025,7 +2024,7 @@ function trivial_binary_operation (operation_in_base_voc: FsmlOperation)
 	}
 }
 
-function trivial_unary_operation (operation_in_base_voc: FsmlOperation)
+function trivial_unary_operation (operation_in_base_voc)
 {
 	return function ()
 	{
@@ -2040,13 +2039,13 @@ function trivial_unary_operation (operation_in_base_voc: FsmlOperation)
 }
 
 
-function plus_target_translation_semantics (operand: Array<any>)
+function plus_target_translation_semantics (operand)
 {
 	return compex_to_infix_str (operand [0])
 		+ " + " + compex_to_infix_str (operand [1]); }
 
 
-function minus_target_translation_semantics (operand: Array<any>)
+function minus_target_translation_semantics (operand)
 {
 	let r_exp_parenthesis_if_any = {"left" : "", "right" : ""},
 		o0 = operand [0],
@@ -2078,9 +2077,9 @@ function minus_target_translation_semantics (operand: Array<any>)
 
 function wrap_by_parenthesis
 (
-	str: string,
-	suboperand: Compex,
-	operand_name: string
+	str,
+	suboperand,
+	operand_name
 )
 {
 	if (js_operation_precedence [suboperand .operator. true_name] <
@@ -2091,7 +2090,7 @@ function wrap_by_parenthesis
 }
 
 
-function mult_target_translation_semantics (operand: Array<any>)
+function mult_target_translation_semantics (operand)
 {
 	// let [o0, o1] = operand;
 	var o0 = operand [0],
@@ -2102,7 +2101,7 @@ function mult_target_translation_semantics (operand: Array<any>)
 }
 
 
-function div_target_translation_semantics (operand: Array<any>)
+function div_target_translation_semantics (operand)
 {
 	var o0 = operand [0],
 		o1 = operand [1];
@@ -2112,7 +2111,7 @@ function div_target_translation_semantics (operand: Array<any>)
 }
 
 
-function pow_target_translation_semantics (operand: Array<any>)
+function pow_target_translation_semantics (operand)
 {
 	var o0 = operand [0],
 		o1 = operand [1];
@@ -2122,7 +2121,7 @@ function pow_target_translation_semantics (operand: Array<any>)
 }
 
 
-function great_target_translation_semantics (operand: Array<any>)
+function great_target_translation_semantics (operand)
 {
 	var o0 = operand [0],
 		o1 = operand [1];
@@ -2177,7 +2176,7 @@ function exclamark_semantics ()
 }
 
 
-function exclamark_target_translation_semantics (operand: Array<any>)
+function exclamark_target_translation_semantics (operand)
 {
 	return compex_to_infix_str (operand [idx_assigned_expression]);
 }
@@ -2203,7 +2202,7 @@ function fetch_semantics ()
 }
 
 
-function id_semantics (operand: Array<any>)
+function id_semantics (operand)
 {
 	var as0 = current_stack .get (0),
 		old_compex = as0 .compex,
@@ -2214,12 +2213,12 @@ function id_semantics (operand: Array<any>)
 }
 
 
-function identifier_target_translation_semantics (operand: Array<any>)
+function identifier_target_translation_semantics (operand)
 	{ return operand [0] }
 
 
 // Never returns identifier, only target text
-function ol_target_translation_semantics (operand: Array<any>)
+function ol_target_translation_semantics (operand)
 {
 	operand = operand [0];
 	const varlist	= variables_digest (operand) .filter (i => i) .join (", ");
@@ -2228,7 +2227,7 @@ function ol_target_translation_semantics (operand: Array<any>)
 }
 
 
-function variables_digest (compex: Compex, varlist: Array<string> = []): Array<string>
+function variables_digest (compex, varlist = [])
 {
 	const operator = compex .operator;
 
@@ -2405,10 +2404,10 @@ function push_semantics ()
 
 function push_target_translation_semantics
 (
-	operand: Array<any>,
-	cpx: Compex,
-	opts: Object = {}
-): string
+	operand,
+	cpx,
+	opts = {}
+)
 {
 	const list_name	= compex_to_infix_str (operand [0], { requested: 'target uid' });
 	const pushee	= compex_to_infix_str (operand [1]);
@@ -2425,7 +2424,7 @@ function push_target_translation_semantics
 
 // Test lines
 
-const tests = (name: string): string =>
+const tests = (name) =>
 (
 	name ||= 'factorial',
 	({
