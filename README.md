@@ -36,11 +36,11 @@ Example of defining an anonymous procedure and assigning it to the variable 'mul
 
 Example of computing factorial of 12 in functional manner with 'if', 'naturange' and '1fold' :
 
-```factor
+```forth
 * ol mul !
 12 dup [ 1 naturange mul id 1fold ] [ 0 ] if .eval
 
-evaluated stack: [479001600]
+\ evaluated stack: [479001600]
 ```
 
 Example of computing factorial of 12 in procedural manner with 'if' and 'while' :
@@ -48,16 +48,5 @@ Example of computing factorial of 12 in procedural manner with 'if' and 'while' 
 ```factor
 12 dup [ 1 [ over * over 1 - ] while swap dp ] [ 0 ] if .eval
 
-evaluated stack: [479001600]
-```
-
-Example of string concatenation in loop :
-
-```factor
-"" comma !
-2 "" [ comma @ + ' somename_' + over + '_alias = somename_' + over + ', ' comma ! over 1 - ] while swap dp
-'let ' swap + ';' +
-.eval dp
-
-evaluated stack: [let somename_2_alias = somename_2, somename_1_alias = somename_1;]
+\ evaluated stack: [479001600]
 ```
