@@ -9,7 +9,7 @@
 
 
 // import { cl, u } from 'raffinade';
-import { cl } from '../node_modules/raffinade/JS/raffinade.js';
+import { cl, u } from '../node_modules/raffinade/JS/raffinade.js';
 
 
 /** Temp support to Firefox. Will be removed at time FF implement toReversed() */
