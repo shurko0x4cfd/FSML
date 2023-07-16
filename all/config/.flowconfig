@@ -1,10 +1,10 @@
 [ignore]
 
 [include]
-../../dist/fsml.js
+../src/fsml.js
 
 [libs]
-# ../flow-typed
+# ../src/flow-typed
 
 [lints]
 
