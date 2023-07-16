@@ -2,6 +2,6 @@
 
 
 # node ./node_modules/flow-bin/cli.js config/.flowconfig --show-all-errors > \
-npx flow src/config/.flowconfig --show-all-errors > \
-	src/logs/flow/flow-full-out.log
-	# src/logs/flow/flow-full-out-$(date +%F_%H-%M).log
+npx flow all/config/.flowconfig --json --show-all-errors > \
+	all/logs/flow/full.json
+	# all/logs/flow/$(date +%F_%H-%M)-full.json
