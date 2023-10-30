@@ -5,7 +5,6 @@
 /* (c) 2021, 2022 Alexander Stadnichénko */
 /* License : BSD */
 /* Ver : 0.3.7 */
-/* Upd : 23.06.15 */
 
 /* eslint-disable */
 

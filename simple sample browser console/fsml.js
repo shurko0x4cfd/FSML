@@ -1,5 +1,5 @@
 
-/* FSML 0.5.11 */
+/* FSML 0.5.14 */
 
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichénko */
@@ -8,26 +8,9 @@
 /*  */
 
 
+// $FlowFixMe
 // import { cl, u } from 'raffinade';
 import { cl, u } from '../node_modules/raffinade/JS/raffinade.js';
-
-
-/** Temp support to Firefox. Will be removed at time FF implement toReversed() */
-!Array.prototype.toReversed &&
-	Object.defineProperty
-	(
-		Array.prototype,
-		'toReversed',
-		{
-			value: function ()
-			{
-				return this .slice () .reverse ();
-			},
-			enumerable: false,
-			writable: false,
-			configurable: false
-		}
-	);
 
 
 /* Defaults for formatting output text */
@@ -486,8 +469,8 @@ class Abstract_stack {
 		const _synonymous = synonymous (compex);
 
 		const like_subex =
-			compex .reference_count > 1 ||
-				compex .check_flag ("subex") || operator .check_flag ("nopure");
+			compex .reference_count > 1 || compex .check_flag ("subex") ||
+			operator .check_flag ("subex") || operator .check_flag ("nopure");
 
 		if (like_subex)
 		{
@@ -564,9 +547,10 @@ const get_fsml_instance = () /*: Object */ =>
 		stack:
 			{
 				type: type_stack,
-				depth: () => current_stack .depth ()
+				depth: () => current_stack .depth (),
 			},
 		eval: fsml_eval,
+		run: eval_semantics,
 		no_type_farewell: () => fsml_systate .no_type_farewell = true,
 		type_farewell: (type = true) => fsml_systate .no_type_farewell = !type
 	});
@@ -965,12 +949,12 @@ const base_voc =
 		list_target_translation_semantics
 	),
 
-	"naturange": new FsmlOperation
+	"1range": new FsmlOperation
 	(
-		"naturange",
-		[],
+		"1range",
+		["subex"],
 		undefined,
-		naturange_target_translation_semantics
+		one_range_target_translation_semantics
 	),
 
 	"if" :		new FsmlOperation
@@ -996,11 +980,19 @@ const base_voc =
 		push_target_translation_semantics
 	),
 
+	"_1fold": new FsmlOperation
+	(
+		"_1fold",
+		["subex"],
+		undefined,
+		_one_fold_target_translation_semantics
+	),
+
 	"1fold": new FsmlOperation
 	(
 		"1fold",
-		[],
-		undefined,
+		["subex"],
+		one_fold_semantics,
 		one_fold_target_translation_semantics
 	),
 
@@ -1010,7 +1002,7 @@ const base_voc =
 };
 
 
-["+", "-", "*", "/", "pow", ">", "naturange", "1fold"] .forEach (term =>
+["+", "-", "*", "/", "pow", ">", "1range",] .forEach (term =>
 	base_voc [term] .compilation_semantics =
 		trivial_binary_operation (base_voc [term]));
 
@@ -1071,12 +1063,11 @@ function eval_semantics ()
 
 function dot_eval_semantics ()
 {
-	const evalresult_raw = eval_semantics (),
+	const evalresult_raw = eval_semantics ();
 
-	// If result is str with ',' ?
-	evalresult_formatted =
+	const evalresult_formatted =
 		"evaluated stack: [ "
-		+ evalresult_raw .toString () .replace (/,/g,", ") + " ]";
+		+ evalresult_raw .join (", ") + " ]";
 
 	fsmlog_type (evalresult_formatted);
 }
@@ -1105,7 +1096,6 @@ function dot_test_semantics ()
 	const evalresult_formatted =
 		"evaluated stack: [ "
 		+ evalresult .join (", ") + " ]";
-		// + evalresult .toString () .replace (/,/g,", ") + " ]";
 
 	fsmlog_type (evalresult_formatted);
 }
@@ -1561,6 +1551,7 @@ function list_target_translation_semantics
 
 	const text =
 		"[ "
+		// $FlowFixMe
 		+ current_stack .get_return_items () .toReversed () .join (", ")
 		+ " ]";
 
@@ -1596,7 +1587,7 @@ function to_list_semantics ()
 }
 
 
-function naturange_target_translation_semantics
+function one_range_target_translation_semantics
 (
 	operand,
 	compex,
@@ -1612,14 +1603,56 @@ function naturange_target_translation_semantics
 	const starts_from = compex_to_infix_str (operand [1]);
 	const lim         = compex_to_infix_str (operand [0]);
 
-	// return `() => naturange(${starts_from}, undefined, ${lim})`;
+	return `function* (c = ${starts_from}) { while (c <= ${lim}) yield c++ }`;
+}
 
-	return `\() =>										${cr}\
-		(function* (c = 1, retval, lim = -1) {			${cr}\
-			if (c < 0) { return retval }				${cr}\
-			while (lim < 0 || c <= lim) { yield c++ }	${cr}\
-			return retval;								${cr}\
-		})(${starts_from}, undefined, ${lim})`
+
+function _one_fold_target_translation_semantics
+(
+	operand,
+	compex,
+	opts
+)
+{
+	if (fsml_systate .need_full_substitution)
+		return compex .str_uid;
+
+	if (opts .requested === 'target uid')
+		return compex .get_target_str_uid ();
+
+	const iterable = compex_to_infix_str (operand [0], { requested: 'target uid' });
+	const folder   = compex_to_infix_str (operand [1]);
+
+	const padding = indent_str .repeat (size_indent);
+
+	return `															\
+		${cr}${padding}() => {											\
+			${cr}${padding .repeat (2)}let acc = 1;						\
+			${cr}${padding .repeat (2)}const iterable = ${iterable}();	\
+			${cr}${padding .repeat (2)}for (let i of iterable)			\
+				${cr}${padding .repeat (3)}acc = ${folder}(i, acc);		\
+			${cr}${padding .repeat (2)}return acc;						\
+		${cr}${padding}}`;
+}
+
+
+function one_fold_semantics ()
+{
+	var as0 = current_stack .pop (),
+	as1 = current_stack .get (0);
+	as0 .compex .reference ();
+
+	current_stack .to_next_computing_order (); // ! Palliative. FIXME
+
+	const folder_proc_compex =
+		new Compex ([as1 .compex, as0 .compex], base_voc ["_1fold"]);
+
+	current_stack .to_next_computing_order (); // ! Palliative. FIXME
+
+	as1 .compex =
+		new Compex ([folder_proc_compex], base_voc ["1fold"]);
+
+	as0 .dereference ();
 }
 
 
@@ -1636,21 +1669,9 @@ function one_fold_target_translation_semantics
 	if (opts .requested === 'target uid')
 		return compex .get_target_str_uid ();
 
-	const iterable = compex_to_infix_str (operand [0]);
-	const folder   = compex_to_infix_str (operand [1]);
-	// For get unquoted string, compex_to_infix_str (operand [1])
-	// return quoted string
-	// const folder   = operand [1] .operand [0];
+	const no_text = compex_to_infix_str (operand [0], { requested: 'target uid' });
 
-	const padding = indent_str .repeat (size_indent);
-
-	return `															\
-		${cr}${padding}(() => {											\
-			${cr}${padding .repeat (2)}let acc = 1;						\
-			${cr}${padding .repeat (2)}for (let i of (${iterable})())	\
-				${cr}${padding .repeat (3)}acc = ${folder}(i, acc);		\
-			${cr}${padding .repeat (2)}return acc;						\
-		${cr}${padding}})()`;
+	return `${no_text}()`;
 }
 
 
@@ -1659,7 +1680,6 @@ class If_compex extends Compex
 	item_names_count;
 	item_names;
 	another_item_names;
-
 }
 
 
@@ -2342,7 +2362,7 @@ function help_semantics ()
 		${cr}! (string any -- variable-id) - 'hold' - hold in variable (without explicit declaring)\
 		${cr}@ (string -- unquoted-string) - 'fetch' - refuse quotes in string\
 		${cr}id - less or more the same as @\
-		${cr}naturange - <end> <start> naturange - Python-like range with step 1. This is JS Generator\
+		${cr}1range - <end> <start> 1range - Python-like range with step +1. This is JS Generator\
 		${cr}1fold - <iterable> <function name> 1fold - functional reduce with start value = 1\
 		${cr}if (quotation quotation condition -- supplier-object) - if statement\
 		${cr}exactly as in the Factor: https://docs.factorcode.org/content/word-if,kernel.html\
@@ -2426,13 +2446,9 @@ function push_target_translation_semantics
 
 const tests = (name) =>
 (
-	name ||= 'factorial',
+	name ||= 'hold-fetch',
 	({
-		'factorial': 'dup [ 1 [ over * over 1 - ] while swap dp ] [ 0 ] if .eval',
-		'factorial-12': '12 factorial .test',
-		'functorial-12': '* ol mul ! 12 dup [ 1 naturange mul id 1fold ] [ 0 ] if .eval',
-		'apply-summ': '12 34 [ [ + ] apply ] apply',
-		'hold-fetch': 'factorial .test asd ! asd @ .js .eval' // ! isnt do .js
+		'hold-fetch': '1234 asd ! asd @ .js .eval' // ! isnt do .js
 	})
 	[name] || "'\\ OMG! Bad name for test'"
 );
