@@ -19,14 +19,50 @@ Features:
 
 * Objects duplicated with classic Forth words as dup, over, etc accessible by reference not by value! Need 'ind' to detach stack item and some time 'dc' to deep copy of object which stack item refer to. Apply quotation on current stack convert this quotation and current stack to bunch of expressions of current stack which is quotation per se. It is not obligate expressions with variables. Although if arguments of quotation contain variables itself or just not enough arguments for quotation in current stack then 'apply' produce expressions with variables. Need use 'dc' on copy of quotation for keep original quotation for use late. Otherwise any 'apply' occured transform it in itself distinctive manner.
 
-1. From under the node just run `fsml` in the shell, if installed globally. Or run `node ./bin/fsml.js` although this would require setting FSML as a dependency of Himself `npm i -D fsmlang`.
+1. From under the node just run `fsml` in the shell, if installed globally `sudo npm i -g fsmlang`. Or run `node ./bin/fsml.js` although this would require setting FSML as a dependency of Himself `npm i -D fsmlang`.
 
 2. Run in browser from under the local server, otherwise there will be a "CORS request not HTTP" error.
 
 Command line starts with '> ' or 'fsml > ' or 'fsml> '. Almost no error handling yet. On error system often crush and require reload of page. Open browsers console to track it.
 
 
-Example of defining an anonymous procedure and assigning it to the variable 'mul' :
+Example of transpiling to JS with '.js' :
+
+```forth
+12 34 + 56 78 -
+
+\ [2]  56 - 78 -> 12 + 34
+
+.js
+
+\ var subex_2 = 12 + 34;
+\ var subex_3 = 56 - 78;
+```
+
+
+Example of JS evaluation with '.eval' :
+
+```forth
+as df + 56 78 -
+
+\ [2]  56 - 78 -> "as" + "df"
+
+.eval
+
+\ evaluated stack: [ -22, asdf ]
+```
+
+
+Example of limited conversion of expression on top of the stack to an anonymous oneliner procedure with 'ol' :
+
+```forth
++ * ol
+
+\ [1]  (var_2, var_3, var_4) => var_4 * (var_3 + var_2)
+```
+
+
+Example of defining an anonymous procedure and assigning it to the variable 'mul' with '!' :
 
 ```forth
 * ol mul !    .js
@@ -38,14 +74,14 @@ Example of computing factorial of 12 in functional manner with 'if', 'naturange'
 
 ```forth
 * ol mul !
-12 dup [ 1 naturange mul id 1fold ] [ 0 ] if .eval
+12 dup [ 1 1range mul @ 1fold ] [ 0 ] if .eval
 
 \ evaluated stack: [479001600]
 ```
 
 Example of computing factorial of 12 in procedural manner with 'if' and 'while' :
 
-```factor
+```forth
 12 dup [ 1 [ over * over 1 - ] while swap dp ] [ 0 ] if .eval
 
 \ evaluated stack: [479001600]
