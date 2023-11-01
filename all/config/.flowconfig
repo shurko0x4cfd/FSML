@@ -1,7 +1,7 @@
 [ignore]
 
 [include]
-../src/fsml.js
+../src
 
 [libs]
 # ../src/flow-typed

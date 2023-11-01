@@ -9,7 +9,7 @@
 /* eslint-disable */
 
 
-import { get_fsml_instance } from './fsml.js';
+import { get_fsml_instance } from './fsmlib.js';
 
 
 

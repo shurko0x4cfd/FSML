@@ -5,7 +5,7 @@
 /* Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichénko */
 /* License : BSD-2-Clause */
 
-/* @flow */
+/*  */
 
 
 // $FlowFixMe
@@ -70,9 +70,9 @@ const get_fsml_instance = () /*: Object */ =>
 
 
 function translate_empty_quotation (
-	indent_size: number,
-	item_names: Array<string>,
-	another_item_names: Array<Array<string>>)
+	indent_size,
+	item_names,
+	another_item_names)
 {
 	var target_text = "";
 	var var_declarations = "";
@@ -125,7 +125,7 @@ function translate_empty_quotation (
 }
 
 
-function fsml_eval (fsml_raw_in: string)
+function fsml_eval (fsml_raw_in)
 {
 	if (fsml_systate .done)
 		return { text: 'Done', done: true };
@@ -159,7 +159,7 @@ function type_stack ()
 	{ return fsml_systate .current_stack .type_stack () }
 
 
-function alt_split (s: string): Array<Array<string>>  // <-- Draft
+function alt_split (s)  // <-- Draft
 {
 	var result = [];
 	var first, last, quotype, _substring = "";
@@ -206,10 +206,10 @@ function alt_split (s: string): Array<Array<string>>  // <-- Draft
 }
 
 
-function compile_term (term: string, quotype: string): void
+function compile_term (term, quotype)
 {
-	let val: any;
-	let as0: Abstract_stack_item;
+	let val;
+	let as0;
 
 	if (!quotype && !term .trim ())
 		fsmlog_type ("Warning: strange non-quoted empty term income...");
@@ -247,7 +247,7 @@ function compile_term (term: string, quotype: string): void
 
 // Test lines
 
-const tests = (name: string): string =>
+const tests = (name) =>
 (
 	name ||= 'hold-fetch',
 	({
