@@ -19,7 +19,7 @@ test ('Apply summ', () =>
 	{
 		const fsml = get_fsml_instance ();
 		const source =
-		'] [ ' +	// Drop result of previous test to proper work
+		'] dp [ ' +	// Drop result of previous test to proper work
 		'12 34 [ [ + ] apply ] apply';
 
 		const evaluated	= fsml .eval (source);
@@ -35,7 +35,7 @@ test ('Complex Apply', () =>
 	{
 		const fsml = get_fsml_instance ();
 		const source =
-			'] [ ' +	// Drop result of previous test to proper work
+			'] dp [ ' +	// Drop result of previous test to proper work
 			'123 dup ind [ dup ind ] apply';
 
 		const evaluated	= fsml .eval (source);
@@ -51,11 +51,27 @@ test ('Complex Apply', () =>
 );
 
 
+test ('Apply and loop', () =>
+	{
+		const fsml = get_fsml_instance ();
+		const source =
+			'] dp [ ' +	// Drop result of previous test to proper work
+			'12 [ 1 [ over * over 1 -  ] while swap dp ] apply';
+
+		const evaluated	= fsml .eval (source);
+		const stack		= fsml .run ();
+		const tos		= stack [0];
+
+		expect (tos) .toBe (479001600);
+	}
+);
+
+
 test ('Chained ifs', () =>
 	{
 		const fsml = get_fsml_instance ();
 		const source =
-			'] [ ' +	// Drop result of previous test to proper work
+			'] dp [ ' +	// Drop result of previous test to proper work
 			'34 true [ 56 + ] [ 78 ] if true [ 91 - ] [ 23 ]  if';
 
 		const evaluated	= fsml .eval (source);
@@ -71,7 +87,7 @@ test ('Chained ifs 2', () =>
 	{
 		const fsml = get_fsml_instance ();
 		const source =
-			'] [ ' +	// Drop result of previous test to proper work
+			'] dp [ ' +	// Drop result of previous test to proper work
 			'12 34 true [ swap swap ] [ 1 2 ] if  true [ swap swap ] [ 1 2 ] if';
 
 		const evaluated	= fsml .eval (source);
@@ -89,7 +105,7 @@ test ('Complex if', () =>
 	{
 		const fsml = get_fsml_instance ();
 		const source =
-			'] [ ' +	// Drop result of previous test to proper work
+			'] dp [ ' +	// Drop result of previous test to proper work
 			'12 34 true [ dp dup ind 56 - swap 78 + ] [ 91 23 ] if';
 
 		const evaluated	= fsml .eval (source);
@@ -107,7 +123,7 @@ test ('Nested if', () =>
 	{
 		const fsml = get_fsml_instance ();
 		const source =
-			'] [ ' +	// Drop result of previous test to proper work
+			'] dp [ ' +	// Drop result of previous test to proper work
 			'12 true [ true [ 34 + ] [ 1 ] if ] [ 1 ] if';
 
 		const evaluated	= fsml .eval (source);
@@ -123,7 +139,7 @@ test ('Complex nested if', () =>
 	{
 		const fsml = get_fsml_instance ();
 		const source =
-			'] [ ' +	// Drop result of previous test to proper work
+			'] dp [ ' +	// Drop result of previous test to proper work
 			'34 true [ 1 + true [ 56 + ] [ 1 ] if ] [ 1 ] if';
 
 		const evaluated	= fsml .eval (source);
@@ -139,7 +155,7 @@ test ('Nested chained if', () =>
 	{
 		const fsml = get_fsml_instance ();
 		const source =
-			'] [ ' +	// Drop result of previous test to proper work
+			'] dp [ ' +	// Drop result of previous test to proper work
 			'34 true [ true [ 56 + ] [ 1 ]  if true [ 78 - ] [ 1 ] if ] [ 1 ] if';
 
 		const evaluated	= fsml .eval (source);
@@ -155,7 +171,7 @@ test ('If on ind-ed args', () =>
 	{
 		const fsml = get_fsml_instance ();
 		const source =
-			'] [ ' +	// Drop result of previous test to proper work
+			'] dp [ ' +	// Drop result of previous test to proper work
 			'1234 dup ind 5678 true [ + dup ] [ 1 2 ] if';
 
 		const evaluated	= fsml .eval (source);
@@ -175,7 +191,7 @@ test ('Push twice', () =>
 	{
 		const fsml = get_fsml_instance ();
 		const source =
-			'] [ ' +	// Drop result of previous test to proper work
+			'] dp [ ' +	// Drop result of previous test to proper work
 			'list  12 push 34 push';
 
 		const evaluated	= fsml .eval (source);
@@ -191,8 +207,56 @@ test ('Factorial of 12 in procedurnal style', () =>
 	{
 		const fsml = get_fsml_instance ();
 		const source =
-			'] [ ' +	// Drop result of previous test to proper work
+			'] dp [ ' +	// Drop result of previous test to proper work
 			'12 dup [ 1 [ over * over 1 - ] while swap dp ] [ 0 ] if';
+
+		const evaluated	= fsml .eval (source);
+		const stack		= fsml .run ();
+		const tos		= stack [0];
+
+		expect (tos) .toBe (479001600);
+	}
+);
+
+
+test ('With Apply', () =>
+	{
+		const fsml = get_fsml_instance ();
+		const source =
+			'] dp [ ' +	// Drop result of previous test to proper work
+			'12 [ dup [ 1 [ over * over 1 - ] while swap dp ] [ 1 ] if ] apply';
+
+		const evaluated	= fsml .eval (source);
+		const stack		= fsml .run ();
+		const tos		= stack [0];
+
+		expect (tos) .toBe (479001600);
+	}
+);
+
+
+test ('Factorial of 12 in procedurnal style 2, Q size = 2', () =>
+	{
+		const fsml = get_fsml_instance ();
+		const source =
+			'] dp [ ' +	// Drop result of previous test to proper work
+			'12 dup [ 1 [ over * over 1 - ] while ] [ 1 1 ] if swap drop';
+
+		const evaluated	= fsml .eval (source);
+		const stack		= fsml .run ();
+		const tos		= stack [0];
+
+		expect (tos) .toBe (479001600);
+	}
+);
+
+
+test ('Factorial of 12 in procedurnal style 3, 1 out of Q', () =>
+	{
+		const fsml = get_fsml_instance ();
+		const source =
+			'] dp [ ' +	// Drop result of previous test to proper work
+			'12 1 [ over * over 1 - ] while swap dp';
 
 		const evaluated	= fsml .eval (source);
 		const stack		= fsml .run ();
@@ -207,7 +271,7 @@ test ('Factorial of 12 in functional style', () =>
 	{
 		const fsml = get_fsml_instance ();
 		const source =
-			'] [ ' +	// Drop result of previous test to proper work
+			'] dp [ ' +	// Drop result of previous test to proper work
 			'* ol mul ! ' +	// var mul = (var_0, var_1) => var_1 * var_0;
 			'12 dup [ 1 1range mul id 1fold ] [ 0 ] if';
 
