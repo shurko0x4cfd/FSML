@@ -138,20 +138,3 @@ export class If_compex extends Compex
 	item_names: Array<string>;
 	another_item_names: Array<Array<string>>;
 }
-
-
-export const create_binary_compex =
-(
-	operand_0: any,
-	operand_1: any,
-	operator: FSMLoperation
-) =>
-	new Compex([operand_0, operand_1], operator);
-
-
-export const create_unary_compex =
-(
-	operand_0: any,
-	operator: FSMLoperation
-) =>
-	new Compex ([operand_0], operator);

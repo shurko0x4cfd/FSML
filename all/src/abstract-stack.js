@@ -274,7 +274,7 @@ export class Abstract_stack {
 
 			let target_str_uid = compex .get_target_str_uid ();
 
-			if (compex .operator .check_flag ("no_equation") || compex .check_flag ("no_equation"))
+			if (compex .operator .check_flag ("no-equation") || compex .check_flag ("no-equation"))
 			{
 				self .target_text += specr + translated_expression;
 				specr = cr;

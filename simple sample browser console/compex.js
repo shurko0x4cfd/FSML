@@ -138,20 +138,3 @@ export class If_compex extends Compex
 	item_names;
 	another_item_names;
 }
-
-
-export const create_binary_compex =
-(
-	operand_0,
-	operand_1,
-	operator
-) =>
-	new Compex([operand_0, operand_1], operator);
-
-
-export const create_unary_compex =
-(
-	operand_0,
-	operator
-) =>
-	new Compex ([operand_0], operator);

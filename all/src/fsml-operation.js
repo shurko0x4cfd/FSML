@@ -3,22 +3,25 @@
 
 export class FSMLoperation {
 
+	term: string;
 	true_name: string;
 	flags: Array<string>;
-	compilation_semantics: Function;
-	translate_to_target: Function;
+	compile: ?Function;
+	translate_to_target: ?Function;
 
 	constructor
 	(
-		true_name: string,
-		flags: Array<string>,
-		compilation_semantics: ?Function,
-		target_translation_semantics: ?Function
+		term: string			= "",
+		true_name: string		= "",
+		flags: Array<string>	= [],
+		compile: ?Function		= undefined,
+		target_translation_semantics: ?Function = undefined
 	)
 	{
+		this .term = term;
 		this .true_name = true_name;
 		this .flags = flags;
-		this .compilation_semantics = compilation_semantics;
+		this .compile = compile;
 		this .translate_to_target = target_translation_semantics;
 	}
 

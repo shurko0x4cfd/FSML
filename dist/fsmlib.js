@@ -1,5 +1,5 @@
 
-/* FSML 0.5.15 */
+/* FSML 0.5.16 */
 
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichénko */
@@ -18,8 +18,10 @@ import { fsml_systate, fsml_systate_set } from './global.js';
 import
 {
 	compilit,					deep_copy,		new_str_uid,
-	compex_to_infix_str,		base_voc,		trivial_unary_operation, trivial_binary_operation,	eval_semantics,	fsmlog_type,
-	set_fsmlog_type,			output_buffer,	clear_output_buffer
+	compex_to_infix_str,		base_voc,
+	fsmlog_type,	set_fsmlog_type,
+	output_buffer,				clear_output_buffer,
+	eval_cmps as eval_semantics
 }
 // $FlowFixMe
 from './factored.js';
@@ -29,7 +31,7 @@ import { Abstract_stack } from './abstract-stack.js';
 // $FlowFixMe
 import { Abstract_stack_item } from './as-item.js';
 // $FlowFixMe
-import { Compex, create_binary_compex } from './compex.js';
+import { Compex } from './compex.js';
 
 
 /* Defaults for formatting output text */
@@ -223,9 +225,6 @@ function compile_term (term, quotype)
 		return;
 	}
 
-	term === "NaN" &&
-		fsmlog_type ("Warning: strange 'NaN' term income...");
-
 	val = parseInt (term);
 
 	if (term === val .toString ())
@@ -237,7 +236,7 @@ function compile_term (term, quotype)
 		{ compilit ("Float", "Fp", val); return; }
 
 	if (term in base_voc)
-		{ base_voc [term] .compilation_semantics (); return; }
+		{ base_voc [term] .compile (); return; }
 
 	compilit ("String", "Str", term);
 	as0 = fsml_systate .current_stack .get (0);

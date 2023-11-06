@@ -3,22 +3,25 @@
 
 export class FSMLoperation {
 
+	term;
 	true_name;
 	flags;
-	compilation_semantics;
+	compile;
 	translate_to_target;
 
 	constructor
 	(
-		true_name,
-		flags,
-		compilation_semantics,
-		target_translation_semantics
+		term			= "",
+		true_name		= "",
+		flags	= [],
+		compile		= undefined,
+		target_translation_semantics = undefined
 	)
 	{
+		this .term = term;
 		this .true_name = true_name;
 		this .flags = flags;
-		this .compilation_semantics = compilation_semantics;
+		this .compile = compile;
 		this .translate_to_target = target_translation_semantics;
 	}
 

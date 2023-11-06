@@ -6,7 +6,8 @@ import { cl, u } from '../node_modules/raffinade/JS/raffinade.js';
 // $FlowFixMe
 import { deep_copy, new_str_uid } from "./factored.js";
 // $FlowFixMe
-import { Compex, create_binary_compex } from "./compex.js";
+import { Compex } from "./compex.js";
+// $FlowFixMe
 import { FSMLoperation } from './fsml-operation.js';
 
 
@@ -25,7 +26,7 @@ export class Abstract_stack_item
 
 	str_uid: string = new_str_uid ("stackitem");
 	reference_count: number  = 1;
-	compex: Compex = create_binary_compex (u, u, new FSMLoperation ("", []));
+	compex: Compex = new Compex ([], new FSMLoperation);
 
 
 	reference = (): void => { this .reference_count += 1 };

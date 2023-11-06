@@ -2,14 +2,8 @@
 
 // $FlowFixMe
 import { fsml_systate } from './global.js'
-
-import
-{
-	Compex, If_compex, create_binary_compex, create_unary_compex
-}
 // $FlowFixMe
-from './compex.js';
-
+import { Compex, If_compex } from './compex.js';
 // $FlowFixMe
 import { Abstract_stack } from './abstract-stack.js';
 // $FlowFixMe
@@ -25,211 +19,105 @@ let cr = "\n";
 let indent_str = " ";
 let size_indent = 4;
 
+// Shortcut
+const u = undefined;
+
+
+const _base_voc =
+[
+	[ "license", "",			[], license_cmps ],
+	[ "bb", "",					[], bb_cmps ],
+	[ "help", "",				[], help_cmps ],
+	[ "tojs", "",				[], tojs_cmps ],
+	[ ".js", "",				[], dot_js_cmps ],
+	[ "eval", "",				[], eval_cmps ],
+	[ ".eval", "",				[], dot_eval_cmps ],
+	[ ".test", "",				[], dot_test_cmps ],
+	[ "red", "",				[], red_cmps ],
+	[ "leaf", "",				[ "nowalk" ] ],
+	// [ "false", "",				[], false_cmps  ],
+	// [ "true", "",				[], true_cmps  ],
+	[ "quotation", "",			[ "nowalk" ], u, quotation_tts ],
+	[ "var", "",				[ "nowalk" ] ],
+	[ "ordered", "",			[], orderd_cmps ],
+	[ "[", "",					[], open_quotation_cmps ],
+	[ "]", "",					[], close_quotation_cmps ],
+	[ "apply", "",				[], apply_cmps ],
+	[ "+", "",					[], u, plus_tts ],
+	[ "-", "",					[], u, minus_tts ],
+	[ "*", "",					[], u, mult_tts ],
+	[ "/", "",					[], u, div_tts ],
+	[ "pow", "",				[], u, pow_tts ],
+	[ ">", "",					[], u, great_tts ],
+	[ "!", "",					[], exclamark_cmps, exclamark_tts ],
+	[ "@", "",					[], fetch_cmps ],
+	[ "id", "",					[], id_cmps ],
+	[ "identifier", "",			[ "nowalk" ], u, identifier_tts ],
+	[ "ol", "",					[], u,	ol_tts ],
+	[ "ind", "",				[], independent_cmps ],
+	[ "i", "",					[], independent_cmps ],
+	[ "dc", "",					[], deep_copy_cmps ],
+	[ "depth", "",				[], depth_cmps ],
+	[ "drop", "",				[], drop_cmps ],
+	[ "dp", "",					[], drop_cmps ],
+	[ "dup", "",				[], dup_cmps ],
+	[ "swap", "",				[], swap_cmps ],
+	[ "over", "",				[], over_cmps ],
+	[ "list", "",				[], empty_list_cmps, list_tts ],
+	[ "1range", "",				[ "subex" ], u, one_range_tts ],
+	[ "if", "",					[ "no-equation" ], if_cmps, if_tts ],
+	[ "if_supplier", "",		[], u, if_supplier_tts ],
+	[ "while", "",				[ "no-equation" ], while_cmps, while_tts ],
+	[ "while_supplier", "",		[], u, while_supplier_tts ],
+	[ "push", "",				[], push_cmps, push_tts ], // push is nopure?
+	[ "_1fold", "",				[ "subex" ], u, _one_fold_tts ],
+	[ "1fold", "",				[ "subex" ], one_fold_cmps, one_fold_tts ],
+	[
+		"q>l",		"quotolist",
+		[ "subex" ],
+		to_list_cmps, list_tts
+	],
+	[
+		"time", "",
+		[ "nopure", "nowalk" ],
+		time_cmps, time_tts
+	],
+];
+
 
 
 export const base_voc =
-{
-	// "":    new FSMLoperation ("", [], _semantics, _target_translation_semantics),
+	_base_voc .reduce ((acc, itm) =>
+		(acc [itm [0]] = new FSMLoperation (...itm), acc), {});
 
-	"license":  new FSMLoperation ("license", [],  license_semantics),
-	"bb":		new FSMLoperation ("bb", [], bb_semantics),
-	"help":		new FSMLoperation ("help", [], help_semantics),
 
-	"tojs":		new FSMLoperation ("tojs", [], tojs_semantics),
-	".js":		new FSMLoperation (".js", [], dot_js_semantics),
-	"eval":		new FSMLoperation ("eval", [], eval_semantics),
-	".eval":	new FSMLoperation (".eval", [], dot_eval_semantics),
-	".test":	new FSMLoperation (".test", [], dot_test_semantics),
-	"red":		new FSMLoperation ("red", [], red_semantics),
+const trivial_xarn_operation =
+	(arnity = 0, operation_in_base_voc) => () =>
+	{
+		const operands_list = [];
 
-	"leaf":		new FSMLoperation ("leaf", ["nowalk"]),
+		for (let ctr = 0; ctr < arnity - 1; ctr++)
+		{
+			const as_item = fsml_systate .current_stack .pop ();
+			const compex = as_item .compex;
+			compex .reference ();
+			as_item .dereference ();
+			operands_list .push (compex);
+		}
 
-	"quotation":	new FSMLoperation ("quotation", ["nowalk"], undefined,
-		quotation_target_translation_semantics),
-
-	"var":		new FSMLoperation ("var", ["nowalk"]),
-
-	"ordered":	new FSMLoperation ("ordered", [], orderd_semantics),
-
-	"[":		new FSMLoperation ("[", [], open_quotation_semantics),
-	"]":		new FSMLoperation ("]", [], close_quotation_semantics),
-	"apply":	new FSMLoperation ("apply", [], apply_semantics),
-
-	"+":		new FSMLoperation
-		("+", [], undefined, plus_target_translation_semantics),
-
-	"-":		new FSMLoperation
-		("-", [], undefined, minus_target_translation_semantics),
-
-	"*":		new FSMLoperation
-		("*", [], undefined, mult_target_translation_semantics),
-
-	"/":		new FSMLoperation
-		("/", [], undefined, div_target_translation_semantics),
-
-	"pow":		new FSMLoperation
-		("pow", [], undefined, pow_target_translation_semantics),
-
-	">":		new FSMLoperation
-		(">", [], undefined, great_target_translation_semantics),
-
-	"!": new FSMLoperation
-		(
-			"!", [],
-			exclamark_semantics,
-			exclamark_target_translation_semantics
-		),
-
-	"@":		new FSMLoperation ("@", [], fetch_semantics),
-
-	"id":		new FSMLoperation ("id", [], id_semantics),
-
-	"identifier":	new FSMLoperation("identifier", ["nowalk"],
-		undefined, identifier_target_translation_semantics),
-
-	// Oneliner
-	// Treat an expression on tos as an anonymous procedure of the form:
-	// (vars in expression if any) => one expression with vars if any
-	// Oneliner can be assigned to a target identifier via !
-	// 12 34 + ol summer ! .js
-	// \ var summer = () => 12 + 34;
-	// 1 + ol increment ! .js
-	// \ var increment = (var_0) => var_0 + 1;
-	"ol": new FSMLoperation
-		(
-			"ol",
-			[],
-			undefined,
-			ol_target_translation_semantics
-		),
-
-	"ind":		new FSMLoperation ("ind", [], independent_semantics),
-	"i":		new FSMLoperation ("i",   [], independent_semantics),
-
-	"dc" :		new FSMLoperation ("dc",  [], deep_copy_semantics),
-	"depth":	new FSMLoperation ("depth", [], depth_semantics),
-	"drop":		new FSMLoperation ("drop", [], drop_semantics),
-	"dp":		new FSMLoperation ("dp", [], drop_semantics),
-	"dup":		new FSMLoperation ("dup", [], dup_semantics),
-	"swap":		new FSMLoperation ("swap", [], swap_semantics),
-	"over":		new FSMLoperation ("over", [], over_semantics),
-
-	// Converting a quotation to a JS list/array whenever possible
-	"q>l" :	new FSMLoperation
-	(
-		"quotolist",
-		["subex"],
-		to_list_semantics,
-		list_target_translation_semantics
-	),
-
-	// New empty JS list/array
-	"list":		new FSMLoperation
-	(
-		'list',
-		[],
-		empty_list_semantics,
-		list_target_translation_semantics
-	),
-
-	"1range": new FSMLoperation
-	(
-		"1range",
-		["subex"],
-		undefined,
-		one_range_target_translation_semantics
-	),
-
-	"if" :		new FSMLoperation
-		("if",  ["no_equation"], if_semantics, if_target_translation_semantics),
-
-	"if_supplier":		new FSMLoperation
-		("if_supplier", [], undefined, if_supplier_target_translation_semantics),
-
-	"while" :	new FSMLoperation
-		("while",  ["no_equation"],
-			while_semantics, while_target_translation_semantics),
-
-	"while_supplier":	new FSMLoperation
-		("while_supplier", [], undefined,
-			while_supplier_target_translation_semantics),
-
-	"push":	new FSMLoperation
-	(
-		"push",
-		// ["nopure",],
-		[],
-		push_semantics,
-		push_target_translation_semantics
-	),
-
-	"_1fold": new FSMLoperation
-	(
-		"_1fold",
-		["subex"],
-		undefined,
-		_one_fold_target_translation_semantics
-	),
-
-	"1fold": new FSMLoperation
-	(
-		"1fold",
-		["subex"],
-		one_fold_semantics,
-		one_fold_target_translation_semantics
-	),
-
-	"time":		new FSMLoperation
-		("time", ["nopure", "nowalk"],
-			time_semantics, time_target_translation_semantics)
-};
+		const asi = fsml_systate .current_stack .get (0);
+		operands_list .push (asi .compex)
+		fsml_systate .current_stack .to_next_computing_order ();
+		asi .compex = new Compex (operands_list .toReversed (), operation_in_base_voc);
+	};
 
 
 ["+", "-", "*", "/", "pow", ">", "1range",] .forEach (term =>
-	base_voc [term] .compilation_semantics =
-		trivial_binary_operation (base_voc [term]));
+	base_voc [term] .compile = trivial_xarn_operation (2, base_voc [term]));
 
 
 ["ol"] .forEach (term =>
-	base_voc [term] .compilation_semantics =
-		trivial_unary_operation (base_voc [term]));
-
-
-export function trivial_binary_operation (operation_in_base_voc)
-{
-	return function ()
-	{
-		var as0 = fsml_systate .current_stack .pop (),
-			as1 = fsml_systate .current_stack .get (0);
-
-		as0 .compex .reference ();
-
-		/* May be better idea is if create_binary_compex will perform reference
-		   of self arguments */
-
-		fsml_systate .current_stack .to_next_computing_order (); // ! Palliative. FIXME
-
-		as1 .compex =
-			create_binary_compex (as1 .compex,
-				as0 .compex, operation_in_base_voc);
-
-		as0 .dereference ();
-	}
-}
-
-export function trivial_unary_operation (operation_in_base_voc)
-{
-	return function ()
-	{
-		const as0 = fsml_systate .current_stack .get (0);
-
-		fsml_systate .current_stack .to_next_computing_order ();
-
-		as0 .compex =
-			create_unary_compex (as0 .compex,
-				operation_in_base_voc);
-	}
-}
+	base_voc [term] .compile = trivial_xarn_operation (1, base_voc [term]));
 
 
 /* Precedence of target language operations (JS) */
@@ -274,14 +162,14 @@ function wrap_by_parenthesis
 const stacks_chain = [];
 
 
-function open_quotation_semantics ()
+function open_quotation_cmps ()
 {
 	stacks_chain .push (fsml_systate .current_stack);
 	fsml_systate .current_stack = new Abstract_stack ();
 }
 
 
-function close_quotation_semantics ()
+function close_quotation_cmps ()
 {
 	stacks_chain .length ||
 		fsmlog_type ("OMG. You can't. You are in root quotation");
@@ -295,18 +183,18 @@ function close_quotation_semantics ()
 }
 
 
-function tojs_semantics ()
+function tojs_cmps ()
 	{ fsml_systate .current_stack .translate_to_js (fsml_systate .current_stack) }
 
 
-function dot_js_semantics ()
+function dot_js_cmps ()
 {
-	tojs_semantics ();
+	tojs_cmps ();
 	fsmlog_type (fsml_systate .current_stack .get_target_text ());
 }
 
 
-export function eval_semantics ()
+export function eval_cmps ()
 {
 	fsml_systate .current_stack .translate_to_js (fsml_systate .current_stack); // Upd jsource
 
@@ -323,9 +211,9 @@ export function eval_semantics ()
 }
 
 
-function dot_eval_semantics ()
+function dot_eval_cmps ()
 {
-	const evalresult_raw = eval_semantics ();
+	const evalresult_raw = eval_cmps ();
 
 	const evalresult_formatted =
 		"evaluated stack: [ "
@@ -335,7 +223,7 @@ function dot_eval_semantics ()
 }
 
 
-function dot_test_semantics ()
+function dot_test_cmps ()
 {
 	const test_name =
 		fsml_systate .current_stack .pop () .compex .operand [0] || '',
@@ -363,7 +251,7 @@ function dot_test_semantics ()
 }
 
 
-function red_semantics ()
+function red_cmps ()
 {
 	var as0 = fsml_systate .current_stack .get (0);
 
@@ -375,10 +263,7 @@ function red_semantics ()
 
 	as0 .compex .dereference ();
 
-	as0 .compex =
-		create_binary_compex (eval_result, undefined, base_voc ["leaf"]);
-
-	/* FIXME Much much better if create_binary_compex will do it */
+	as0 .compex = new Compex ([eval_result, u], base_voc ["leaf"]);
 	as0 .compex ["type"] = "Reduced";
 	as0 .compex ["shortype"] = "Red";
 
@@ -388,12 +273,11 @@ function red_semantics ()
 		as0 .compex ["type"] = "String";
 		as0 .compex ["shortype"] = "Str";
 	}
-	else
-		as0 .compex .quotype = "";
+	else as0 .compex .quotype = "";
 }
 
 
-function quotation_target_translation_semantics (operand)
+function quotation_tts (operand)
 {
 	var translate_kind = operand [1];
 
@@ -429,7 +313,7 @@ function _substitute_variables (compex, p, n)
 
 	if (operator === base_voc ["var"])
 	{
-		var placeholder = p .operand [n] || new Compex ([], new FSMLoperation ("", []));
+		var placeholder = p .operand [n] || new Compex ([], "", []);
 		var substitutional = fsml_systate .current_stack .get (compex .operand [0]) .compex;
 		p .operand [n] = substitutional;
 
@@ -482,7 +366,7 @@ function _substitute_variables (compex, p, n)
 function substitute_variables (item)
 {
 	// const pseudo_compex = { "operand": [] };
-	const pseudo_compex = new Compex ([], new FSMLoperation ("", []));
+	const pseudo_compex = new Compex ([], "", []);
 
 	_substitute_variables (item .compex, pseudo_compex, 0);
 
@@ -493,7 +377,7 @@ function substitute_variables (item)
 
 let new_utmost_order = 0;
 
-function apply_semantics ()
+function apply_cmps ()
 {
 	const as0		= fsml_systate .current_stack .pop ();
 	const quotation	= as0 .compex .operand [0];
@@ -532,16 +416,16 @@ function apply_semantics ()
 
 
 /** New empty JS-like list/array */
-function empty_list_semantics ()
+function empty_list_cmps ()
 {
-	open_quotation_semantics ();
-	close_quotation_semantics ();
-	to_list_semantics ();
+	open_quotation_cmps ();
+	close_quotation_cmps ();
+	to_list_cmps ();
 }
 
 
 /** Limited convertion quotation to JS list */
-function list_target_translation_semantics
+function list_tts
 (
 	operand,
 	parent,
@@ -573,14 +457,14 @@ function list_target_translation_semantics
 
 
 /** Limited convertion quotation to JS list */
-function to_list_semantics ()
+function to_list_cmps ()
 {
 	const as0       = fsml_systate .current_stack .get (0);
 	const quotation = as0 .compex .dc ();
 	const asi       = new_stack_item ("list", "lst", quotation, "q>l");
 
 	quotation ?. dc_postprocess (quotation);
-	quotation .set_flag ("no_equation");
+	quotation .set_flag ("no-equation");
 	quotation .operand [1] = {}; // wtf?
 	quotation .set_flag ("subex"); // wtf?
 	asi .compex .set_flag ("subex");
@@ -598,7 +482,7 @@ function to_list_semantics ()
 }
 
 
-function one_range_target_translation_semantics
+function one_range_tts
 (
 	operand,
 	compex,
@@ -618,7 +502,7 @@ function one_range_target_translation_semantics
 }
 
 
-function _one_fold_target_translation_semantics
+function _one_fold_tts
 (
 	operand,
 	compex,
@@ -647,7 +531,7 @@ function _one_fold_target_translation_semantics
 }
 
 
-function one_fold_semantics ()
+function one_fold_cmps ()
 {
 	var as0 = fsml_systate .current_stack .pop (),
 	as1 = fsml_systate .current_stack .get (0);
@@ -667,7 +551,7 @@ function one_fold_semantics ()
 }
 
 
-function one_fold_target_translation_semantics
+function one_fold_tts
 (
 	operand,
 	compex,
@@ -691,7 +575,7 @@ function one_fold_target_translation_semantics
 // not referd by nothing beside deliverer. 'dc' on deliverer produce copy
 // of deliverer (?), not if_object
 
-function if_semantics ()
+function if_cmps ()
 {
 	var if_compex = new If_compex ([], base_voc ["if"]);
 
@@ -720,7 +604,7 @@ function if_semantics ()
 
 	for (let idx = 0; idx < touched + 3; idx++)
 	{
-		independent_semantics ();
+		independent_cmps ();
 
 		var item = fsml_systate .current_stack .pop ();
 
@@ -776,7 +660,7 @@ function if_semantics ()
 	{
 		const item =
 			new_stack_item
-				("if_supplier", "if_supplier", undefined, "if_supplier");
+				("if_supplier", "if_supplier", u, "if_supplier");
 
 		/* temp */
 		item .compex .dc =
@@ -840,7 +724,7 @@ function quot_to_js
 }
 
 
-function if_target_translation_semantics (operand, if_object)
+function if_tts (operand, if_object)
 {
 	const condition_str_uid = operand [2] .get_target_str_uid ();
 
@@ -877,7 +761,7 @@ function if_target_translation_semantics (operand, if_object)
 }
 
 
-function if_supplier_target_translation_semantics (operand)
+function if_supplier_tts (operand)
 {
 	if (fsml_systate .need_full_substitution)
 		return "if_" +operand [0];
@@ -886,7 +770,7 @@ function if_supplier_target_translation_semantics (operand)
 }
 
 
-function while_semantics ()
+function while_cmps ()
 {
 	const while_object     = new Compex ([], base_voc ["while"]);
 	const quotation        = fsml_systate .current_stack .get (0) .compex .operand [0];
@@ -904,7 +788,7 @@ function while_semantics ()
 
 	for (let i = 0; i < touched +1; i++)
 	{
-		independent_semantics ();
+		independent_cmps ();
 
 		const item = fsml_systate .current_stack .pop ();
 
@@ -960,7 +844,7 @@ function while_semantics ()
 
 		var item =
 			new_stack_item ("while_supplier",
-				"while_supplier", undefined, "while_supplier");
+				"while_supplier", u, "while_supplier");
 
 		/* temp */
 		item .compex .dc = function () { return this; }
@@ -981,7 +865,7 @@ function while_semantics ()
 }
 
 
-function while_target_translation_semantics (operand, while_object)
+function while_tts (operand, while_object)
 {
 	const condition_str_uid = while_object .item_names [0];
 
@@ -1016,7 +900,7 @@ function while_target_translation_semantics (operand, while_object)
 }
 
 
-function while_supplier_target_translation_semantics (operand)
+function while_supplier_tts (operand)
 {
 	if (fsml_systate .need_full_substitution)
 		return "while_" +operand [0];
@@ -1025,13 +909,13 @@ function while_supplier_target_translation_semantics (operand)
 }
 
 
-function plus_target_translation_semantics (operand)
+function plus_tts (operand)
 {
 	return compex_to_infix_str (operand [0])
 		+ " + " + compex_to_infix_str (operand [1]); }
 
 
-function minus_target_translation_semantics (operand)
+function minus_tts (operand)
 {
 	let r_exp_parenthesis_if_any = {"left" : "", "right" : ""},
 		o0 = operand [0],
@@ -1061,7 +945,7 @@ function minus_target_translation_semantics (operand)
 }
 
 
-function mult_target_translation_semantics (operand)
+function mult_tts (operand)
 {
 	// let [o0, o1] = operand;
 	var o0 = operand [0],
@@ -1072,7 +956,7 @@ function mult_target_translation_semantics (operand)
 }
 
 
-function div_target_translation_semantics (operand)
+function div_tts (operand)
 {
 	var o0 = operand [0],
 		o1 = operand [1];
@@ -1082,7 +966,7 @@ function div_target_translation_semantics (operand)
 }
 
 
-function pow_target_translation_semantics (operand)
+function pow_tts (operand)
 {
 	var o0 = operand [0],
 		o1 = operand [1];
@@ -1092,7 +976,7 @@ function pow_target_translation_semantics (operand)
 }
 
 
-function great_target_translation_semantics (operand)
+function great_tts (operand)
 {
 	var o0 = operand [0],
 		o1 = operand [1];
@@ -1102,7 +986,7 @@ function great_target_translation_semantics (operand)
 }
 
 
-function orderd_semantics () // <-- temporarily solution
+function orderd_cmps () // <-- temporarily solution
 {
 	var as0 = fsml_systate .current_stack .get (0);
 	as0 .compex .comparative_computing_order =
@@ -1114,7 +998,7 @@ const idx_var_name = 1;
 const idx_assigned_expression = 0;
 
 
-function exclamark_semantics ()
+function exclamark_cmps ()
 {
 	const as0 = fsml_systate .current_stack .get (0);
 	const as1 = fsml_systate .current_stack .get (1);
@@ -1122,7 +1006,7 @@ function exclamark_semantics ()
 	as0 .dereference ();
 
 	const exclamark_item =
-		new_stack_item ("Exclamark", "Em", undefined, "!");
+		new_stack_item ("Exclamark", "Em", u, "!");
 
 	const compex  = exclamark_item .compex;
 	const operand = compex .operand;
@@ -1147,7 +1031,7 @@ function exclamark_semantics ()
 }
 
 
-function exclamark_target_translation_semantics (operand)
+function exclamark_tts (operand)
 {
 	return compex_to_infix_str (operand [idx_assigned_expression]);
 }
@@ -1155,7 +1039,7 @@ function exclamark_target_translation_semantics (operand)
 
 // Currently is just a move quoted string from leaf on tos
 // as unquoted string in new leaf i.e. refuse quotes
-function fetch_semantics ()
+function fetch_cmps ()
 {
 	var as0 = fsml_systate .current_stack .get (0);
 	var name = as0 .compex .operand [0];
@@ -1163,7 +1047,7 @@ function fetch_semantics ()
 	as0 .dereference ();
 	fsml_systate .current_stack .pop ();
 
-	var item = new_stack_item ("leaf", "leaf", undefined, "leaf");
+	var item = new_stack_item ("leaf", "leaf", u, "leaf");
 	item .compex .operand [0] = name;
 
 	item .compex .comparative_computing_order =
@@ -1173,7 +1057,7 @@ function fetch_semantics ()
 }
 
 
-function id_semantics (operand)
+function id_cmps (operand)
 {
 	var as0 = fsml_systate .current_stack .get (0),
 		old_compex = as0 .compex,
@@ -1184,12 +1068,12 @@ function id_semantics (operand)
 }
 
 
-function identifier_target_translation_semantics (operand)
+function identifier_tts (operand)
 	{ return operand [0] }
 
 
 // Never returns identifier, only target text
-function ol_target_translation_semantics (operand)
+function ol_tts (operand)
 {
 	operand = operand [0];
 	const varlist	= variables_digest (operand) .filter (i => i) .join (", ");
@@ -1198,7 +1082,7 @@ function ol_target_translation_semantics (operand)
 }
 
 
-function independent_semantics ()
+function independent_cmps ()
 {
 	var as0 = fsml_systate .current_stack .get (0);
 	var new_item = new Abstract_stack_item;
@@ -1209,9 +1093,9 @@ function independent_semantics ()
 }
 
 
-function deep_copy_semantics ()
+function deep_copy_cmps ()
 {
-	independent_semantics ();
+	independent_cmps ();
 	var as0 = fsml_systate .current_stack .get (0),
 		old_compex = as0 .compex;
 	as0 .compex = as0 .compex .dc ();
@@ -1220,11 +1104,11 @@ function deep_copy_semantics ()
 }
 
 
-function depth_semantics ()
+function depth_cmps ()
 	{ compilit ("Number", "Num", fsml_systate .current_stack .depth ()) }
 
 
-function drop_semantics ()
+function drop_cmps ()
 {
 	var as0 = fsml_systate .current_stack .get (0);
 	as0 .dereference ();
@@ -1232,7 +1116,7 @@ function drop_semantics ()
 }
 
 
-function dup_semantics ()
+function dup_cmps ()
 {
 	var as0 = fsml_systate .current_stack .get (0);
 	as0 .reference ();
@@ -1240,7 +1124,7 @@ function dup_semantics ()
 }
 
 
-function swap_semantics ()
+function swap_cmps ()
 {
 	var as0 = fsml_systate .current_stack .get (0);
 	fsml_systate .current_stack .set (0, fsml_systate .current_stack .get (1));
@@ -1248,7 +1132,7 @@ function swap_semantics ()
 }
 
 
-function over_semantics ()
+function over_cmps ()
 {
 	var as1 = fsml_systate .current_stack .get (1);
 	as1 .reference ();
@@ -1256,7 +1140,7 @@ function over_semantics ()
 }
 
 
-function bb_semantics ()
+function bb_cmps ()
 {
 	fsml_systate .done = true;
 
@@ -1265,7 +1149,7 @@ function bb_semantics ()
 }
 
 
-function help_semantics ()
+function help_cmps ()
 {
 	fsmlog_type
 	(`Terminology:\
@@ -1304,21 +1188,21 @@ function help_semantics ()
 }
 
 
-function license_semantics ()
+function license_cmps ()
 	{ fsmlog_type (BSD_2_Clause_license) }
 
 
 // External environment functions
 
 
-function time_target_translation_semantics ()
+function time_tts ()
 	{ return "(+new Date ())" }
 
 
-function time_semantics ()
+function time_cmps ()
 {
 	var another_newdate_operation =
-		new_stack_item ("Native", "Nat", undefined, "time");
+		new_stack_item ("Native", "Nat", u, "time");
 
 	another_newdate_operation .compex .comparative_computing_order =
 		fsml_systate .current_stack .get_next_computing_order ();
@@ -1328,7 +1212,7 @@ function time_semantics ()
 }
 
 
-function push_semantics ()
+function push_cmps ()
 {
 	// At time need check and force declare of identifier if not
 	// Or find and substitute
@@ -1337,7 +1221,7 @@ function push_semantics ()
 	const operands			= [op_left_list, op_right_pushee];
 
 	const push_operation =
-		new_stack_item ("Native", "Nat", undefined, "push");
+		new_stack_item ("Native", "Nat", u, "push");
 
 	push_operation .compex .operand = operands;
 	push_operation .compex .set_flag ('subex');
@@ -1350,7 +1234,7 @@ function push_semantics ()
 }
 
 
-function push_target_translation_semantics
+function push_tts
 (
 	operand,
 	cpx,
