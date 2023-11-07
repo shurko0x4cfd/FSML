@@ -35,8 +35,8 @@ const _base_voc =
 	[ ".test", "",				[], dot_test_cmps ],
 	[ "red", "",				[], red_cmps ],
 	[ "leaf", "",				[ "nowalk" ] ],
-	// [ "false", "",				[], false_cmps  ],
-	// [ "true", "",				[], true_cmps  ],
+	[ "true", "",				[], true_cmps ],
+	[ "false", "",				[], false_cmps ],
 	[ "quotation", "",			[ "nowalk" ], u, quotation_tts ],
 	[ "var", "",				[ "nowalk" ] ],
 	[ "ordered", "",			[], orderd_cmps ],
@@ -72,16 +72,8 @@ const _base_voc =
 	[ "push", "",				[], push_cmps, push_tts ], // push is nopure?
 	[ "_1fold", "",				[ "subex" ], u, _one_fold_tts ],
 	[ "1fold", "",				[ "subex" ], one_fold_cmps, one_fold_tts ],
-	[
-		"q>l",		"quotolist",
-		[ "subex" ],
-		to_list_cmps, list_tts
-	],
-	[
-		"time", "",
-		[ "nopure", "nowalk" ],
-		time_cmps, time_tts
-	],
+	[ "q>l", "quotolist",		[ "subex" ], to_list_cmps, list_tts ],
+	[ "time", "",				[ "nopure", "nowalk" ], time_cmps, time_tts ],
 ];
 
 
@@ -93,7 +85,7 @@ export const base_voc: base_voc_obj =
 
 
 const trivial_xarn_operation =
-	(arnity: number = 0, operation_in_base_voc: FSMLoperation) => () =>
+	(arnity: number = 1, operation_in_base_voc: FSMLoperation) => () =>
 	{
 		const operands_list = [];
 
@@ -910,10 +902,19 @@ function while_supplier_tts (operand: Array<any>)
 }
 
 
+function true_cmps ()
+	{ compilit ("Boolean", "Bool", true) }
+
+
+function false_cmps ()
+	{ compilit ("Boolean", "Bool", false) }
+
+
 function plus_tts (operand: Array<any>)
 {
 	return compex_to_infix_str (operand [0])
-		+ " + " + compex_to_infix_str (operand [1]); }
+		+ " + " + compex_to_infix_str (operand [1]);
+}
 
 
 function minus_tts (operand: Array<any>)
