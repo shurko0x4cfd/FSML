@@ -10,7 +10,7 @@ import
 	base_voc, new_var_item
 }
 // $FlowFixMe
-from './factored.js';
+from './base-voc.js';
 
 // $FlowFixMe
 import { Abstract_stack_item } from './as-item.js';

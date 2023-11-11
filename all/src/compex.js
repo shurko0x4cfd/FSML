@@ -10,7 +10,7 @@ import
 	new_str_uid
 }
 // $FlowFixMe
-from "./factored.js";
+from "./base-voc.js";
 
 import { FSMLoperation } from "./fsml-operation.js";
 

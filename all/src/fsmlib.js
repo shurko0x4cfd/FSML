@@ -24,7 +24,7 @@ import
 	eval_cmps as eval_semantics
 }
 // $FlowFixMe
-from './factored.js';
+from './base-voc.js';
 
 // $FlowFixMe
 import { Abstract_stack } from './abstract-stack.js';
