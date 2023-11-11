@@ -1411,6 +1411,62 @@ export function variables_digest (compex: Compex, varlist: Array<string> = []): 
 }
 
 
+function translate_empty_quotation (
+	indent_size: number,
+	item_names: Array<string>,
+	another_item_names: Array<Array<string>>)
+{
+	var target_text = "";
+	var var_declarations = "";
+	var assign_statement = "";
+	let comma = "", equation = "";
+
+	var indent_string =  indent_str .repeat (indent_size);
+
+	item_names = item_names || [];
+
+	item_names .forEach (function (item, index)
+	{
+		if (! item) return;
+
+		var_declarations =
+			var_declarations + comma    + item;
+
+		assign_statement =
+			assign_statement + equation + item;
+
+		comma = ", "; equation = " = ";
+	});
+
+	another_item_names .forEach (item =>
+		{
+			if (item .length === 0) return;
+
+			var_declarations =
+				var_declarations + comma + item .join (", ");
+
+			assign_statement =
+				assign_statement + equation + item .join (" = ");
+
+			comma = ", "; equation = " = ";
+		});
+
+	if (var_declarations)
+		var_declarations = "var " + var_declarations + ";";
+
+	if (assign_statement)
+		assign_statement += " = undefined;";
+
+	if (var_declarations || assign_statement)
+	{
+		target_text = cr + indent_string + var_declarations
+			+ cr + indent_string + assign_statement;
+	}
+
+	return target_text;
+}
+
+
 /* if default 'fsmlog_type' is not overriden, accumulate fsml output for return
    to environmen at end of compilation. Otherwise use external 'fsmlog_type'
    for type immediately */
