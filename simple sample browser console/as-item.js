@@ -4,7 +4,7 @@
 // $FlowFixMe
 import { cl, u } from '../node_modules/raffinade/JS/raffinade.js';
 // $FlowFixMe
-import { deep_copy, new_str_uid } from "./factored.js";
+import { deep_copy, new_str_uid } from "./base-voc.js";
 // $FlowFixMe
 import { Compex } from "./compex.js";
 // $FlowFixMe

@@ -1,5 +1,5 @@
 
-/* FSML 0.5.17 */
+/* FSML 0.6.0 */
 
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichénko */
@@ -12,20 +12,19 @@
 import { cl, u } from 'raffinade';
 // import { cl, u } from '../node_modules/raffinade/JS/raffinade.js';
 
-// $FlowFixMe
-import { fsml_systate, fsml_systate_set } from './global.js';
-
 import
 {
-	compilit,					deep_copy,		new_str_uid,
+	compilit,					new_str_uid,
 	compex_to_infix_str,		base_voc,
-	fsmlog_type,	set_fsmlog_type,
+	fsmlog_type,				set_fsmlog_type,
 	output_buffer,				clear_output_buffer,
 	eval_cmps as eval_semantics
 }
 // $FlowFixMe
-from './factored.js';
+from './base-voc.js';
 
+// $FlowFixMe
+import { StacksChain } from './stacks-chain.js';
 // $FlowFixMe
 import { Abstract_stack } from './abstract-stack.js';
 // $FlowFixMe
@@ -41,14 +40,16 @@ let indent_str = " ";
 let size_indent = 4;
 
 
-fsml_systate_set
-({
+export const stacks_chain = new StacksChain;
+
+
+export const fsml_systate =
+{
 	done: false,
 	need_full_substitution: false,
 	quote_default_type: '"',
 	no_type_farewell: false,
-	current_stack: new Abstract_stack ()
-});
+};
 
 
 /**
@@ -62,69 +63,13 @@ const get_fsml_instance = () /*: Object */ =>
 		stack:
 			{
 				type: type_stack,
-				depth: () => fsml_systate .current_stack .depth (),
+				depth: () => stacks_chain .current .depth (),
 			},
 		eval: fsml_eval,
-		run: eval_semantics,
+		run: () => eval_semantics (stacks_chain .current, stacks_chain),
 		no_type_farewell: () => fsml_systate .no_type_farewell = true,
 		type_farewell: (type = true) => fsml_systate .no_type_farewell = !type
 	});
-
-
-function translate_empty_quotation (
-	indent_size,
-	item_names,
-	another_item_names)
-{
-	var target_text = "";
-	var var_declarations = "";
-	var assign_statement = "";
-	let comma = "", equation = "";
-
-	var indent_string =  indent_str .repeat (indent_size);
-
-	item_names = item_names || [];
-
-	item_names .forEach (function (item, index)
-	{
-		if (! item) return;
-
-		var_declarations =
-			var_declarations +comma    +item;
-
-		assign_statement =
-			assign_statement +equation +item;
-
-		comma = ", "; equation = " = ";
-	});
-
-	another_item_names .forEach (item =>
-		{
-			if (item .length === 0) return;
-
-			var_declarations =
-				var_declarations + comma + item .join (", ");
-
-			assign_statement =
-				assign_statement + equation + item .join (" = ");
-
-			comma = ", "; equation = " = ";
-		});
-
-	if (var_declarations)
-		var_declarations = "var " +var_declarations +";";
-
-	if (assign_statement)
-		assign_statement += " = undefined;";
-
-	if (var_declarations || assign_statement)
-	{
-		target_text = cr + indent_string + var_declarations
-			+ cr + indent_string + assign_statement;
-	}
-
-	return target_text;
-}
 
 
 function fsml_eval (fsml_raw_in)
@@ -141,7 +86,7 @@ function fsml_eval (fsml_raw_in)
 		}
 		catch (exc)
 		{
-			fsmlog_type ('Environment exception:');
+			fsmlog_type (cr + cr + 'Environment exception:');
 			fsmlog_type (cr + cr + exc);
 		}});
 
@@ -158,7 +103,7 @@ function fsml_eval (fsml_raw_in)
 
 
 function type_stack ()
-	{ return fsml_systate .current_stack .type_stack () }
+	{ return stacks_chain .current .type_stack () }
 
 
 function alt_split (s)  // <-- Draft
@@ -218,8 +163,8 @@ function compile_term (term, quotype)
 
 	if ((quotype === '"') || (quotype === "'"))
 	{
-		compilit ("String", "Str", term);
-		as0 = fsml_systate .current_stack .get (0);
+		compilit ("String", "Str", term, stacks_chain .current, stacks_chain);
+		as0 = stacks_chain .current .get (0);
 		as0 .compex .quotype = quotype;
 
 		return;
@@ -228,18 +173,18 @@ function compile_term (term, quotype)
 	val = parseInt (term);
 
 	if (term === val .toString ())
-		{ compilit ("Number", "Num", val); return; }
+		{ compilit ("Number", "Num", val, stacks_chain .current, stacks_chain); return; }
 
 	val = parseFloat (term);
 
 	if (term === val .toString ())
-		{ compilit ("Float", "Fp", val); return; }
+		{ compilit ("Float", "Fp", val, stacks_chain .current, stacks_chain); return; }
 
 	if (term in base_voc)
-		{ base_voc [term] .compile (); return; }
+		{ base_voc [term] .compile (stacks_chain .current, stacks_chain); return; }
 
-	compilit ("String", "Str", term);
-	as0 = fsml_systate .current_stack .get (0);
+	compilit ("String", "Str", term, stacks_chain .current, stacks_chain);
+	as0 = stacks_chain .current .get (0);
 	as0 .compex .quotype = fsml_systate .quote_default_type;
 }
 
@@ -257,3 +202,5 @@ const tests = (name) =>
 
 
 export { get_fsml_instance };
+
+// Bugs: dc, type, [ 12 ] q>l

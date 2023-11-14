@@ -2,7 +2,7 @@
 /*  */
 
 // $FlowFixMe
-import { fsml_systate } from './global.js';
+import { fsml_systate } from './fsmlib.js';
 
 import
 {
@@ -10,7 +10,7 @@ import
 	base_voc, new_var_item
 }
 // $FlowFixMe
-from './factored.js';
+from './base-voc.js';
 
 // $FlowFixMe
 import { Abstract_stack_item } from './as-item.js';
@@ -30,8 +30,8 @@ export class Abstract_stack {
 
 	dc_postprocess = function (obj)
 	{
-		obj.str_uid = new_str_uid ("quotation");
-		obj.actual_target_names = false;
+		obj .str_uid = new_str_uid ("quotation");
+		obj .actual_target_names = false;
 
 		return obj;
 	}
@@ -63,16 +63,11 @@ export class Abstract_stack {
 	item_names = [];
 	another_item_names = [];
 
-	kind_of_next_compilation = "no-incomings";
-
-	compiled_function_name_if_named = "";
-
 	target_text = "";
 	aliastatement = "";
 	indent_size = 0;
 	return_statement = "";
 	return_items = [];
-	evalresult = [];
 	uids_already_in_equation_left = [];
 	str_uids_to_rename = [];
 
@@ -180,165 +175,39 @@ export class Abstract_stack {
 	need_id_substitution = () => this ._need_id_substitution;
 
 
-	type_stack = () =>
+	type_stack = (quot = this) =>
 	{
-		const self = this;
 		fsml_systate .need_full_substitution = true;
 
-		this .order_subexpressions ();
+		quot .order_subexpressions (quot);
 
-		const reversed_stack = fsml_systate .current_stack .container .toReversed (),
+		const reversed_stack = quot .container .toReversed (),
 			fsml_out = [];
 
 		reversed_stack .forEach (function (item)
 		{
-			self ._need_id_substitution = item .compex;
-			fsml_out .push (compex_to_infix_str (item .compex));
+			quot ._need_id_substitution = item .compex;
+			fsml_out .push
+			(
+				compex_to_infix_str
+				(
+					item .compex,
+					{ requested: 'cipher' },
+					undefined,
+					quot
+				)
+			);
 		});
 
 		return fsml_out;
 	};
 
 
-	translate_to_js = () =>
-	{
-		const self = this;
-		const indent_string =  indent_str .repeat (fsml_systate .current_stack .indent_size);
-		fsml_systate .need_full_substitution = false; // ! Bad place
-		this .uids_already_in_equation_left = [];
-		this .str_uids_to_rename = [];
-
-		// ! for same compexes item override id next time unlike case next item equal previous
-		// ! write to targrt_str_uid have no effect to suppliers
-		this .item_names .forEach ((item, index) =>
-			{
-				const element = self .container [index] .compex;
-
-				element .target_str_uid = item;
-
-				element .check_flag ("deliverer") &&
-					element .set_target_str_uid (item);
-			});
-
-		this .order_subexpressions ();
-
-		this .target_text = "";
-		let specr = "\n"; // <- For avoid first cr. Not in use
-
-		function process_expression (item, index)
-		{
-			var compex = item [0];
-			var syn_list = item [1];
-
-			self ._need_id_substitution = compex;
-			var translated_expression = compex_to_infix_str (compex);
-			var syn = "", syn_declarations = "", comma = "";
-
-			if (syn_list .length > 1)
-			{
-				syn_declarations = specr + indent_string + "var ";
-				  specr = cr;
-
-				syn_list .forEach (item =>
-				{
-					if (!item) // ! Can be undefined, is issue and call for fix
-					{
-						cl ("item undefined or \"\"");
-						cl (item);
-
-						fsmlog_type ('item undefined or ""');
-
-						return;
-					}
-
-					if (item === translated_expression) return;
-
-					syn += item + " = ";
-					syn_declarations += comma + item;
-					comma = ", ";
-				});
-
-				syn_declarations += ";";
-			}
-
-			if (syn_list .length === 1)
-			{
-				var syn_item = syn_list [0];
-
-				if (syn_item && (syn_item !== translated_expression))
-					syn = "var " + syn_item + " = ";
-
-				if (syn_item && (syn_item === translated_expression))
-					syn = ""; // "/* Tautology '" +syn_item +" = " +syn_item +"' excluded */"; } }
-			}
-
-			let target_str_uid = compex .get_target_str_uid ();
-
-			if (compex .operator .check_flag ("no-equation") || compex .check_flag ("no-equation"))
-			{
-				self .target_text += specr + translated_expression;
-				specr = cr;
-			}
-			else
-			{
-				if (syn)
-				{
-					self .target_text +=
-						syn_declarations
-							+ cr + indent_string + syn + translated_expression + ";";
-
-					syn_list .forEach (item =>
-						self .uids_already_in_equation_left .push (item));
-				}
-
-				// For excluding tautology ala 'let name = name;'
-				if (!syn && translated_expression !== target_str_uid)
-				{
-					self .target_text +=
-						specr + indent_string
-							+ "var " + target_str_uid
-								+ " = " + translated_expression + ";";
-
-					self .uids_already_in_equation_left .push (target_str_uid);
-					specr = cr;
-				}
-			}
-		}
-
-		this .ordered_subexpressions .forEach (group =>
-			group .forEach (process_expression));
-
-		var str_uids_to_rename = fsml_systate .current_stack .str_uids_to_rename;
-		fsml_systate .current_stack .aliastatement = "";
-
-		if (str_uids_to_rename .length)
-		{
-			var comma = "";
-			str_uids_to_rename .forEach ((item, index) =>
-			{
-				fsml_systate .current_stack .aliastatement +=
-					comma +item +"_copy" +" = " +item;
-
-				comma = "," + cr + indent_string + indent_str .repeat (size_indent * 2);
-			});
-
-			if (fsml_systate .current_stack .aliastatement)
-				fsml_systate .current_stack .aliastatement =
-					cr + indent_string + indent_str .repeat (size_indent) + "var "
-						+ fsml_systate .current_stack .aliastatement + ";" + cr;
-		}
-
-		if (fsml_systate .current_stack .isloop)
-			fsml_systate .current_stack .target_text =
-				fsml_systate .current_stack .aliastatement + fsml_systate .current_stack .target_text;
-	};
-
-
 	get_target_text = () => this .target_text;
 
 
-	get_return_items = () =>
-		this .return_items .map (compex => compex .get_target_str_uid ());
+	get_return_items = (quot = this) =>
+		quot .return_items .map (compex => compex .get_target_str_uid ());
 
 
 	get_return_statement = () =>
@@ -347,27 +216,31 @@ export class Abstract_stack {
 		+ " ];";
 
 
-	order_subexpressions = () =>
+	order_subexpressions = (quot) =>
 	{
-		const self = this;
-		this .ordered_subexpressions = [];
-		this .reset_pseudo_order ();
-		this .return_items = [];
+		quot .ordered_subexpressions = [];
+		quot .reset_pseudo_order ();
+		quot .return_items = [];
 
-		const stack = fsml_systate .current_stack .items_digest ();
+		const stack = quot .items_digest ();
 
 		stack .forEach ((item, position) =>
-			self ._order_subexpressions (item .compex, item, position));
+			quot ._order_subexpressions (item .compex, item, position, quot));
 
-		fsml_systate .current_stack .assignments .forEach ((item, position) =>
-			self ._order_subexpressions (item .compex, new Abstract_stack_item, position));
+		quot .assignments .forEach ((item, position) =>
+			quot ._order_subexpressions (item .compex, new Abstract_stack_item, position, quot));
 
-		this .return_items .reverse ();
+		quot .return_items .reverse ();
 	}
 
 
 	_order_subexpressions =
-		(compex, item, position) =>
+	(
+		compex,
+		item,
+		position,
+		quot
+	) =>
 	{
 		const operator = compex .operator;
 
@@ -375,7 +248,7 @@ export class Abstract_stack {
 				(compex !== item .compex))
 					return;
 
-		const _synonymous = synonymous (compex);
+		const _synonymous = synonymous (compex, quot);
 
 		const like_subex =
 			compex .reference_count > 1 || compex .check_flag ("subex") ||
@@ -385,13 +258,13 @@ export class Abstract_stack {
 		{
 			var str_uid;
 
-			if (this .actual_target_names)
+			if (quot .actual_target_names)
 				str_uid = compex .get_target_str_uid ();
 			else
 				str_uid = new_str_uid ("subex");
 
 			append_to_order (compex .comparative_computing_order,
-				compex, _synonymous);
+				compex, _synonymous, quot);
 
 			compex .target_str_uid = str_uid;
 		}
@@ -405,15 +278,15 @@ export class Abstract_stack {
 			if (compex .comparative_computing_order !== undefined)
 				order = compex .comparative_computing_order;
 			else
-				order = fsml_systate .current_stack .get_next_pseudo_order ();
+				order = quot .get_next_pseudo_order ();
 
-			append_to_order (order, compex, _synonymous);
+			append_to_order (order, compex, _synonymous, quot);
 		}
 
 		if (is_stack_item)
 		{
 			compex .get_target_str_uid ();
-			this .return_items .push (compex);
+			quot .return_items .push (compex);
 		}
 
 		if (operator .check_flag ("nowalk"))
@@ -427,7 +300,7 @@ export class Abstract_stack {
 		for (var i = compex .operands_offset;  i < compex .operand .length; i++)
 		{
 			const operand = compex .operand [i];
-			operand && this ._order_subexpressions (operand, item, position);
+			operand && quot ._order_subexpressions (operand, item, position, quot);
 		}
 	}
 }
@@ -437,10 +310,11 @@ function append_to_order
 (
 	order,
 	compex,
-	_synonymous
+	_synonymous,
+	quot
 )
 {
-	const ordered_subexpressions = fsml_systate .current_stack .ordered_subexpressions;
+	const ordered_subexpressions = quot .ordered_subexpressions;
 
 	if (! ordered_subexpressions [order])
 		ordered_subexpressions [order] = [];
@@ -454,12 +328,12 @@ function append_to_order
 }
 
 
-function synonymous (compex)
+function synonymous (compex, quot)
 {
 	let synonymous = [];
-	const stack_items = fsml_systate .current_stack .items_digest ();
+	const stack_items = quot .items_digest ();
 
-	if (fsml_systate .current_stack .item_names .length === 0)
+	if (quot .item_names .length === 0)
 		return synonymous;
 
 	stack_items .forEach (function (item, index)
@@ -467,10 +341,9 @@ function synonymous (compex)
 			if (stack_items [index] .compex === compex )
 			{
 				synonymous =
-					synonymous .concat (fsml_systate .current_stack
-						.another_item_names [index]);
+					synonymous .concat (quot .another_item_names [index]);
 
-				const name = fsml_systate .current_stack .item_names [index];
+				const name = quot .item_names [index];
 
 				if (!name) return;
 

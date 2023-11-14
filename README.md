@@ -1,7 +1,7 @@
 # FSML
 **Kawaii homoiconic postfix concatenative programming language**
 
-FSML is Forth/Factor-like programming language and transpiller for. Now in infancy. Language expected to be mainly procedural with wide functional style support. Intended mainly to static compilation to othes high-level languages. First to JavaScript and PHP, then to others on my choose. Then I hope add interpretation abilities for dialog work.
+FSML is Forth/Factor-like programming language and transpiller for. Now in infancy. Language expected to be mainly procedural with wide functional style support. Intended mainly to static compilation to othes high-level languages. First to JavaScript, then to others on my choose. Then I hope add interpretation abilities for dialog work.
 
 Stack is abstraction of compile time. Compiler \[should\] produce code with munimal runtime overhead. With no any virtual machine. With no any byte code or threaded code. With no any stack or stack juggling at run time. Look, text `1 2 3 swap drop +` compiled to JS code `var subex_0 = 1 + 3;` You see no any stack or stack manipulation in produced code, no interpretation at run time, hence no overhead.
 

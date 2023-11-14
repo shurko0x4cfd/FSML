@@ -2,16 +2,10 @@
 /* @flow */
 
 // $FlowFixMe
-import { fsml_systate } from "./global.js";
-
-import
-{
-	deep_copy,
-	new_str_uid
-}
+import { deep_copy,	new_str_uid } from "./base-voc.js";
 // $FlowFixMe
-from "./base-voc.js";
-
+import { StacksChain } from './stacks-chain.js';
+// $FlowFixMe
 import { FSMLoperation } from "./fsml-operation.js";
 
 
@@ -21,11 +15,13 @@ export class Compex
 {
 	operator: FSMLoperation;
 	operand: Array<any>;
+	comparative_computing_order: number;
 
-	constructor (operands: Array<any>, operator: FSMLoperation)
+	constructor (operands: Array<any>, operator: FSMLoperation, uco: number)
 	{
 		this .operand  = operands;
 		this .operator = operator;
+		this .comparative_computing_order = uco;
 	}
 
 	dc: Function = deep_copy;
@@ -46,9 +42,6 @@ export class Compex
 	target_str_uid: string = "";
 	operands_offset = 0;
 	reference_count = 1;
-	comparative_computing_order: number = fsml_systate .current_stack .utmost_computing_order;
-	// comparative_computing_order = // ?
-	//		fsml_systate .current_stack .get_next_computing_order ();
 	type     = "Expression";
 	shortype = "Exp";
 	quotype = "";
@@ -106,7 +99,7 @@ export class Compex
 	}
 
 
-	reference = (): void =>
+	reference = (chain: StacksChain): void =>
 	{
 		this .reference_count += 1;
 
@@ -114,9 +107,9 @@ export class Compex
 		if (this .reference_count > 0)
 		{
 			this .comparative_computing_order =
-				fsml_systate .current_stack .get_next_computing_order ();
+				chain .current .get_next_computing_order ();
 
-			fsml_systate .current_stack .to_next_computing_order ();
+			chain .current .to_next_computing_order ();
 		}
 	}
 

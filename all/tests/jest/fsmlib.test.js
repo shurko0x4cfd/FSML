@@ -15,6 +15,23 @@ test ('intro', () =>
 );
 
 
+// Template
+test ('Embracing', () =>
+	{
+		const fsml = get_fsml_instance ();
+		const source =
+		'] dp [ ' +	// Drop result of previous test to proper work
+		'2 3 + 4 *';
+
+		const evaluated	= fsml .eval (source);
+		const stack		= fsml .run ();
+		const tos		= stack [0];
+
+		expect (tos) .toBe (20);
+	}
+);
+
+
 test ('Apply summ', () =>
 	{
 		const fsml = get_fsml_instance ();
@@ -192,7 +209,40 @@ test ('Push twice', () =>
 		const fsml = get_fsml_instance ();
 		const source =
 			'] dp [ ' +	// Drop result of previous test to proper work
-			'list  12 push 34 push';
+			'list 12 push 34 push';
+
+		const evaluated	= fsml .eval (source);
+		const stack		= fsml .run ();
+		const tos		= stack [0];
+
+		expect (tos) .toStrictEqual ([12, 34]);
+	}
+);
+
+
+// Failed ! ReferenceError: subex_52 is not defined
+// test ('Push twice 2', () =>
+// 	{
+// 		const fsml = get_fsml_instance ();
+// 		const source =
+// 			'] dp [ ' +	// Drop result of previous test to proper work
+// 			'[ 56 ] q>l 12 push 34 push';
+
+// 		const evaluated	= fsml .eval (source);
+// 		const stack		= fsml .run ();
+// 		const tos		= stack [0];
+
+// 		expect (tos) .toStrictEqual ([56, 12, 34]);
+// 	}
+// );
+
+
+test ('Push twice 3', () =>
+	{
+		const fsml = get_fsml_instance ();
+		const source =
+			'] dp [ ' +	// Drop result of previous test to proper work
+			'[ ] q>l 12 push 34 push';
 
 		const evaluated	= fsml .eval (source);
 		const stack		= fsml .run ();
