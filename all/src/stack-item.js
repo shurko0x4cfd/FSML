@@ -1,24 +1,26 @@
 
 /* @flow */
 
+const u = undefined;
+
 // $FlowFixMe
-import { cl, u } from '../node_modules/raffinade/JS/raffinade.js';
+import { fsmlog_type } from './fsmlib.js';
 // $FlowFixMe
 import { deep_copy, new_str_uid } from "./base-voc.js";
 // $FlowFixMe
 import { Compex } from "./compex.js";
 // $FlowFixMe
-import { FSMLoperation } from './fsml-operation.js';
+import { FSMLOperation } from './operation.js';
 
 
 
 
-export class Abstract_stack_item
+export class StackItem
 {
 	dc: Function = deep_copy;
 
 	dc_postprocess =
-		function (obj: Abstract_stack_item): Abstract_stack_item
+		function (obj: StackItem): StackItem
 		{
 			obj .str_uid = new_str_uid ("stackitem");
 			return obj;
@@ -26,7 +28,7 @@ export class Abstract_stack_item
 
 	str_uid: string = new_str_uid ("stackitem");
 	reference_count: number  = 1;
-	compex: Compex = new Compex ([], new FSMLoperation);
+	compex: Compex = new Compex ([], new FSMLOperation);
 
 
 	reference = (): void => { this .reference_count += 1 };

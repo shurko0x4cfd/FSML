@@ -2,14 +2,14 @@
 /* @flow */
 
 // $FlowFixMe
-import { Abstract_stack } from "./abstract-stack.js";
+import { Quotation } from "./quotation.js";
 
 
 
 
 export class StacksChain
 {
-	container: Array<Abstract_stack> = [ new Abstract_stack ];
+	container: Array<Quotation> = [ new Quotation ];
 
 
 	get current ()
@@ -18,7 +18,7 @@ export class StacksChain
 	}
 
 
-	set current (quot: Abstract_stack)
+	set current (quot: Quotation)
 	{
 		this .container .push (quot);
 	}

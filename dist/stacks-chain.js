@@ -2,14 +2,14 @@
 /*  */
 
 // $FlowFixMe
-import { Abstract_stack } from "./abstract-stack.js";
+import { Quotation } from "./quotation.js";
 
 
 
 
 export class StacksChain
 {
-	container = [ new Abstract_stack ];
+	container = [ new Quotation ];
 
 
 	get current ()

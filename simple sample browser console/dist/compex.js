@@ -1,12 +1,17 @@
 
 /*  */
 
+
 // $FlowFixMe
-import { deep_copy,	new_str_uid } from "./base-voc.js";
+import { fsmlog_type, collect } from './fsmlib.js';
+// $FlowFixMe
+import { deep_copy, new_str_uid } from "./base-voc.js";
 // $FlowFixMe
 import { StacksChain } from './stacks-chain.js';
 // $FlowFixMe
-import { FSMLoperation } from "./fsml-operation.js";
+import { FSMLOperation } from "./operation.js";
+// $FlowFixMe
+import { new_uuid } from './tools.js';
 
 
 
@@ -22,12 +27,20 @@ export class Compex
 		this .operand  = operands;
 		this .operator = operator;
 		this .comparative_computing_order = uco;
+
+		/** FSML session-lifetime uniq id */
+		this .uuid = new_uuid();
+		collect[this .uuid] = this;
 	}
 
 	dc = deep_copy;
 
 	dc_postprocess = function ( obj)
 	{
+		/** FSML session-lifetime uniq id */
+		obj .uuid = new_uuid();
+		collect[obj .uuid] = obj;
+
 		// if str_uid is charact of rels must be the same for Q
 		obj .str_uid = new_str_uid ("compex");
 		obj .target_str_uid = "";
@@ -125,7 +138,7 @@ export class Compex
 }
 
 
-export class If_compex extends Compex
+export class IFCompex extends Compex
 {
 	item_names_count;
 	item_names;

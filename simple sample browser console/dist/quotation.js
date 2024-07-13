@@ -1,9 +1,6 @@
 
 /*  */
 
-// $FlowFixMe
-import { fsml_systate } from './fsmlib.js';
-
 import
 {
 	deep_copy, new_str_uid, compex_to_infix_str,
@@ -13,7 +10,7 @@ import
 from './base-voc.js';
 
 // $FlowFixMe
-import { Abstract_stack_item } from './as-item.js';
+import { StackItem } from './stack-item.js';
 
 
 
@@ -24,7 +21,7 @@ let indent_str = " ";
 let size_indent = 4;
 
 
-export class Abstract_stack {
+export class Quotation {
 	this;
 	dc = deep_copy;
 
@@ -63,7 +60,7 @@ export class Abstract_stack {
 	item_names = [];
 	another_item_names = [];
 
-		target_text = "";
+	target_text = "";
 	aliastatement = "";
 	indent_size = 0;
 	return_statement = "";
@@ -115,7 +112,7 @@ export class Abstract_stack {
 
 	get_quotation_item = () =>
 	{
-		const asi    = new Abstract_stack_item (),
+		const asi    = new StackItem (),
 		      compex = asi .compex;
 		compex .type = "Quotation";
 		compex .shortype = "Q";
@@ -131,7 +128,7 @@ export class Abstract_stack {
 	get_quotation_item =
 		(asi = undefined, compex = undefined) =>
 		(
-			asi    = new Abstract_stack_item (),
+			asi    = new StackItem (),
 			compex = asi .compex,
 			compex .type        = "Quotation",
 			compex .shortype    = "Q",
@@ -177,14 +174,12 @@ export class Abstract_stack {
 
 	type_stack = (quot = this) =>
 	{
-		fsml_systate .need_full_substitution = true;
-
 		quot .order_subexpressions (quot);
 
 		const reversed_stack = quot .container .toReversed (),
 			fsml_out = [];
 
-		reversed_stack .forEach (function (item)
+		reversed_stack .forEach (item =>
 		{
 			quot ._need_id_substitution = item .compex;
 			fsml_out .push
@@ -228,7 +223,7 @@ export class Abstract_stack {
 			quot ._order_subexpressions (item .compex, item, position, quot));
 
 		quot .assignments .forEach ((item, position) =>
-			quot ._order_subexpressions (item .compex, new Abstract_stack_item, position, quot));
+			quot ._order_subexpressions (item .compex, new StackItem, position, quot));
 
 		quot .return_items .reverse ();
 	}
@@ -306,6 +301,18 @@ export class Abstract_stack {
 }
 
 
+/**
+ * Append a given Compex and its synonymous array to the ordered subexpressions
+ * at a specific order in the Quotation object.
+ *
+ * @param {number}			order 	The order at which the Compex and its
+ * 									synonymous array should be appended.
+ * @param {Compex}			compex	The Compex object to append.
+ * @param {Array<string>}	_synonymous The array of synonymous strings
+ * 										related to the Compex.
+ * @param {Quotation}		quot	The Quotation object where the ordered
+ * 									subexpressions are stored.
+ */
 function append_to_order
 (
 	order,

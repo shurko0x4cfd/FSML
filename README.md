@@ -21,7 +21,7 @@ Features:
 
 1. From under the node just run `fsml` in the shell, if installed globally `sudo npm i -g fsmlang`. Or run `node dist/fsml.js`
 
-2. Run in browser from under the local server, otherwise there will be a "CORS request not HTTP" error.
+2. Run in browser from under the local server with the root in "./simple sample browser console".
 
 Command line starts with '> ' or 'fsml > ' or 'fsml> '. Almost no error handling yet. On error system often crush and require reload of page. Open browsers console to track it.
 

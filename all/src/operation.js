@@ -1,7 +1,7 @@
 
 /* @flow */
 
-export class FSMLoperation {
+export class FSMLOperation {
 
 	term: string;
 	true_name: string;
@@ -24,7 +24,6 @@ export class FSMLoperation {
 		this .compile = compile;
 		this .translate_to_target = target_translation_semantics;
 	}
-
 
 	check_flag = (flag: string): boolean => this .flags .includes (flag);
 }

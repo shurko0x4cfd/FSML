@@ -1,8 +1,5 @@
 
-/* @flow */
-
-// $FlowFixMe
-import { fsml_systate } from './fsmlib.js';
+/*  */
 
 import
 {
@@ -13,7 +10,7 @@ import
 from './base-voc.js';
 
 // $FlowFixMe
-import { Abstract_stack_item } from './as-item.js';
+import { StackItem } from './stack-item.js';
 
 
 
@@ -24,11 +21,11 @@ let indent_str = " ";
 let size_indent = 4;
 
 
-export class Abstract_stack {
-	this: Abstract_stack;
-	dc: Function = deep_copy;
+export class Quotation {
+	this;
+	dc = deep_copy;
 
-	dc_postprocess = function (obj: Object): Object
+	dc_postprocess = function (obj)
 	{
 		obj .str_uid = new_str_uid ("quotation");
 		obj .actual_target_names = false;
@@ -36,8 +33,8 @@ export class Abstract_stack {
 		return obj;
 	}
 
-	str_uid: string = new_str_uid ("quotation");
-	flags: Array<string> = [];
+	str_uid = new_str_uid ("quotation");
+	flags = [];
 
 	// When performed deep copy of quotation we need to reset cached identifiers
 	// of target language in copy because old names belong to original quotation
@@ -50,44 +47,44 @@ export class Abstract_stack {
 	pseudo_order = 0;
 
 	tail_starts_from = 0; // Even if container presented ?
-	container: Array<Object> = [];
-	assignments: Array<Abstract_stack_item> = [];
+	container = [];
+	assignments = [];
 
-	_need_id_substitution: Compex;
+	_need_id_substitution;
 	isloop = false;
-	ordered_subexpressions: Array<any> = [];
+	ordered_subexpressions = [];
 
 	// [ "str", "str", ... "str" ] Precalculated function argument names
 	// or top stack values at loop start if any
-	predefined_argument_names: Array<string> = [];
-	item_names: Array<string> = [];
-	another_item_names: Array<string> = [];
+	predefined_argument_names = [];
+	item_names = [];
+	another_item_names = [];
 
 	target_text = "";
 	aliastatement = "";
 	indent_size = 0;
 	return_statement = "";
-	return_items: Array<any> = [];
-	uids_already_in_equation_left: Array<any> = [];
-	str_uids_to_rename: Array<any> = [];
+	return_items = [];
+	uids_already_in_equation_left = [];
+	str_uids_to_rename = [];
 
-	depth = (): number => { return this .container .length; }
+	depth = () => { return this .container .length; }
 
-	get_utmost_computing_order = (): number => this .utmost_computing_order;
-	items_digest = (): Array<Object> => this .container .slice ();
-	push = (item: Abstract_stack_item): number => this .container .push (item);
-	get_next_computing_order = (): number => ++this .utmost_computing_order;
-	to_next_computing_order = (): void => { ++this .utmost_computing_order };
-	get_next_pseudo_order = (): number => ++this .pseudo_order +this .utmost_computing_order;
-	reset_pseudo_order = (): void => { this .pseudo_order = 0 }
+	get_utmost_computing_order = () => this .utmost_computing_order;
+	items_digest = () => this .container .slice ();
+	push = (item) => this .container .push (item);
+	get_next_computing_order = () => ++this .utmost_computing_order;
+	to_next_computing_order = () => { ++this .utmost_computing_order };
+	get_next_pseudo_order = () => ++this .pseudo_order +this .utmost_computing_order;
+	reset_pseudo_order = () => { this .pseudo_order = 0 }
 
-	set_flag = (flag: string): void =>
+	set_flag = (flag) =>
 		{ (flag in this .flags) || (this .flags .push (flag)) };
 
-	check_flag = (flag: string): boolean => this .flags .includes (flag);
+	check_flag = (flag) => this .flags .includes (flag);
 
 
-	extend_stack_if_necessary = (index: number): void =>
+	extend_stack_if_necessary = (index) =>
 	{
 		let c = this .container,
 			l = c.length;
@@ -101,7 +98,7 @@ export class Abstract_stack {
 	};
 
 
-	materialize_tail = (lack: number): Array<Abstract_stack_item> =>
+	materialize_tail = (lack) =>
 	{
 		var tail = [];
 
@@ -113,9 +110,9 @@ export class Abstract_stack {
 	}
 
 
-	get_quotation_item = (): Abstract_stack_item =>
+	get_quotation_item = () =>
 	{
-		const asi    = new Abstract_stack_item (),
+		const asi    = new StackItem (),
 		      compex = asi .compex;
 		compex .type = "Quotation";
 		compex .shortype = "Q";
@@ -131,7 +128,7 @@ export class Abstract_stack {
 	get_quotation_item =
 		(asi = undefined, compex = undefined) =>
 		(
-			asi    = new Abstract_stack_item (),
+			asi    = new StackItem (),
 			compex = asi .compex,
 			compex .type        = "Quotation",
 			compex .shortype    = "Q",
@@ -143,7 +140,7 @@ export class Abstract_stack {
 	*/
 
 
-	pop = (): Abstract_stack_item =>
+	pop = () =>
 	{
 		const index = 0;
 		this .extend_stack_if_necessary (index);
@@ -153,7 +150,7 @@ export class Abstract_stack {
 	};
 
 
-	get = (index: number): Abstract_stack_item =>
+	get = (index) =>
 	{
 		this .extend_stack_if_necessary (index);
 		var c = this .container;
@@ -163,7 +160,7 @@ export class Abstract_stack {
 	};
 
 
-	set = (index: number, value: Abstract_stack_item): void =>
+	set = (index, value) =>
 	{
 		this .extend_stack_if_necessary (index);
 		var c = this .container;
@@ -172,19 +169,17 @@ export class Abstract_stack {
 	};
 
 
-	need_id_substitution = (): Compex => this ._need_id_substitution;
+	need_id_substitution = () => this ._need_id_substitution;
 
 
-	type_stack = (quot: Abstract_stack = this): Array<any> =>
+	type_stack = (quot = this) =>
 	{
-		fsml_systate .need_full_substitution = true;
-
 		quot .order_subexpressions (quot);
 
 		const reversed_stack = quot .container .toReversed (),
 			fsml_out = [];
 
-		reversed_stack .forEach (function (item)
+		reversed_stack .forEach (item =>
 		{
 			quot ._need_id_substitution = item .compex;
 			fsml_out .push
@@ -203,20 +198,20 @@ export class Abstract_stack {
 	};
 
 
-	get_target_text = (): string => this .target_text;
+	get_target_text = () => this .target_text;
 
 
-	get_return_items = (quot: Abstract_stack = this): Array<string> =>
+	get_return_items = (quot = this) =>
 		quot .return_items .map (compex => compex .get_target_str_uid ());
 
 
-	get_return_statement = (): string =>
+	get_return_statement = () =>
 		"return [ "
 		+ this .get_return_items () .join (", ")
 		+ " ];";
 
 
-	order_subexpressions = (quot: Abstract_stack): void =>
+	order_subexpressions = (quot) =>
 	{
 		quot .ordered_subexpressions = [];
 		quot .reset_pseudo_order ();
@@ -228,7 +223,7 @@ export class Abstract_stack {
 			quot ._order_subexpressions (item .compex, item, position, quot));
 
 		quot .assignments .forEach ((item, position) =>
-			quot ._order_subexpressions (item .compex, new Abstract_stack_item, position, quot));
+			quot ._order_subexpressions (item .compex, new StackItem, position, quot));
 
 		quot .return_items .reverse ();
 	}
@@ -236,11 +231,11 @@ export class Abstract_stack {
 
 	_order_subexpressions =
 	(
-		compex: Compex,
-		item: Abstract_stack_item,
-		position: number,
-		quot: Abstract_stack
-	): void =>
+		compex,
+		item,
+		position,
+		quot
+	) =>
 	{
 		const operator = compex .operator;
 
@@ -273,7 +268,7 @@ export class Abstract_stack {
 
 		if (is_stack_item && !like_subex)
 		{
-			let order: number;
+			let order;
 
 			if (compex .comparative_computing_order !== undefined)
 				order = compex .comparative_computing_order;
@@ -306,12 +301,24 @@ export class Abstract_stack {
 }
 
 
+/**
+ * Append a given Compex and its synonymous array to the ordered subexpressions
+ * at a specific order in the Quotation object.
+ *
+ * @param {number}			order 	The order at which the Compex and its
+ * 									synonymous array should be appended.
+ * @param {Compex}			compex	The Compex object to append.
+ * @param {Array<string>}	_synonymous The array of synonymous strings
+ * 										related to the Compex.
+ * @param {Quotation}		quot	The Quotation object where the ordered
+ * 									subexpressions are stored.
+ */
 function append_to_order
 (
-	order: number,
-	compex: Compex,
-	_synonymous: Array<string>,
-	quot: Abstract_stack
+	order,
+	compex,
+	_synonymous,
+	quot
 )
 {
 	const ordered_subexpressions = quot .ordered_subexpressions;
@@ -328,7 +335,7 @@ function append_to_order
 }
 
 
-function synonymous (compex: Compex, quot: Abstract_stack): Array<string>
+function synonymous (compex, quot)
 {
 	let synonymous = [];
 	const stack_items = quot .items_digest ();

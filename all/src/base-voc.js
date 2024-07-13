@@ -1,22 +1,20 @@
 /* @flow */
 
 
-// $FlowFixMe
-import { cl, u } from 'raffinade';
-// import { cl, u } from '../node_modules/raffinade/JS/raffinade.js';
+const u = undefined;
 
 // $FlowFixMe
-import { fsml_systate } from './fsmlib.js'
+import { fsmlog_type, collect } from './fsmlib.js';
 // $FlowFixMe
 import { StacksChain } from './stacks-chain.js';
 // $FlowFixMe
-import { Abstract_stack } from './abstract-stack.js';
+import { Quotation } from './quotation.js';
 // $FlowFixMe
-import { Abstract_stack_item } from './as-item.js';
+import { StackItem } from './stack-item.js';
 // $FlowFixMe
-import { Compex, If_compex } from './compex.js';
+import { Compex, IFCompex } from './compex.js';
 // $FlowFixMe
-import { FSMLoperation } from './fsml-operation.js';
+import { FSMLOperation } from './operation.js';
 
 
 
@@ -79,19 +77,24 @@ const _base_voc =
 	[ "1fold", "",				[ "subex" ], one_fold_cmps, one_fold_tts ],
 	[ "q>l", "quotolist",		[ "subex" ], to_list_cmps, list_tts ],
 	[ "time", "",				[ "nopure", "nowalk" ], time_cmps, time_tts ],
+
+	[ "collog", "",				[], log_collect_cmps ],
 ];
 
 
-type base_voc_obj = { [string]: FSMLoperation };
+function log_collect_cmps () { console.log(JSON.stringify(collect)) }
+
+
+type base_voc_obj = { [string]: FSMLOperation };
 
 export const base_voc: base_voc_obj =
 	_base_voc .reduce ((acc, itm) =>
-		(acc [itm [0]] = new FSMLoperation (...itm), acc), {});
+		(acc [itm [0]] = new FSMLOperation (...itm), acc), {});
 
 
 const trivial_xarn_operation =
-	(arnity: number = 1, operation_in_base_voc: FSMLoperation) =>
-		(quot: Abstract_stack, chain: StacksChain) =>
+	(arnity: number = 1, operation_in_base_voc: FSMLOperation) =>
+		(quot: Quotation, chain: StacksChain) =>
 		{
 			const operands_list = [];
 
@@ -164,13 +167,13 @@ function wrap_by_parenthesis
 }
 
 
-function open_quotation_cmps (quot: Abstract_stack, chain: StacksChain)
+function open_quotation_cmps (quot: Quotation, chain: StacksChain)
 {
-	return { nested_quot: chain .current = new Abstract_stack };
+	return { nested_quot: chain .current = new Quotation };
 }
 
 
-function close_quotation_cmps (quot: Abstract_stack, chain: StacksChain)
+function close_quotation_cmps (quot: Quotation, chain: StacksChain)
 {
 	chain .length ||
 		fsmlog_type ("OMG. You can't. You are in root quotation");
@@ -178,27 +181,27 @@ function close_quotation_cmps (quot: Abstract_stack, chain: StacksChain)
 	if (! chain .length)
 		return;
 
-	const nestedQuot = quot .get_quotation_item ();
+	const nested_quot = quot .get_quotation_item ();
 	chain .pop ();
 	const outerQuot = chain .current;
-	outerQuot .push (nestedQuot);
+	outerQuot .push (nested_quot);
 
-	return { nestedQuot };
+	return { nested_quot };
 }
 
 
-function tojs_cmps (quot: Abstract_stack)
+function tojs_cmps (quot: Quotation)
 	{ translate_to_js (quot) }
 
 
-function dot_js_cmps (quot: Abstract_stack)
+function dot_js_cmps (quot: Quotation)
 {
 	tojs_cmps (quot);
 	fsmlog_type (quot .get_target_text ());
 }
 
 
-export function eval_cmps (quot: Abstract_stack, chain: StacksChain)
+export function eval_cmps (quot: Quotation, chain: StacksChain)
 {
 	translate_to_js (quot); // Upd jsource
 
@@ -215,7 +218,7 @@ export function eval_cmps (quot: Abstract_stack, chain: StacksChain)
 }
 
 
-function dot_eval_cmps (quot: Abstract_stack)
+function dot_eval_cmps (quot: Quotation)
 {
 	const evalresult_raw = eval_cmps (quot);
 
@@ -227,7 +230,7 @@ function dot_eval_cmps (quot: Abstract_stack)
 }
 
 
-function dot_test_cmps (quot: Abstract_stack)
+function dot_test_cmps (quot: Quotation)
 {
 	const test_name =
 		quot .pop () .compex .operand [0] || '',
@@ -254,15 +257,15 @@ function dot_test_cmps (quot: Abstract_stack)
 }
 
 
-function red_cmps (quot: Abstract_stack, chain: StacksChain)
+function red_cmps (quot: Quotation, chain: StacksChain)
 {
 	var as0 = quot .get (0);
 
-	fsml_systate .need_full_substitution = true; // Bad place for this 3 line
 	quot .order_subexpressions (quot);
 	quot ._need_id_substitution = as0 .compex;
 
-	var eval_result = eval (compex_to_infix_str (as0 .compex, u, u, quot));
+	var eval_result =
+		eval (compex_to_infix_str (as0 .compex, {requested: 'cipher'}, u, quot));
 
 	as0 .compex .dereference ();
 
@@ -295,7 +298,7 @@ function _substitute_variables
 	compex: Compex,
 	p: Compex,
 	n: number,
-	quot: Abstract_stack,
+	quot: Quotation,
 	chain: StacksChain
 )
 {
@@ -370,8 +373,8 @@ function _substitute_variables
 
 function substitute_variables
 (
-	item: Abstract_stack_item,
-	quot: Abstract_stack,
+	item: StackItem,
+	quot: Quotation,
 	chain: StacksChain
 )
 {
@@ -386,7 +389,7 @@ function substitute_variables
 
 let new_utmost_order = 0;
 
-function apply_cmps (quot: Abstract_stack, chain: StacksChain)
+function apply_cmps (quot: Quotation, chain: StacksChain)
 {
 	const as0		= quot .pop ();
 	const quotation	= as0 .compex .operand [0];
@@ -424,7 +427,7 @@ function apply_cmps (quot: Abstract_stack, chain: StacksChain)
 
 
 /** New empty JS-like list/array */
-function empty_list_cmps (quot: Abstract_stack, chain: StacksChain)
+function empty_list_cmps (quot: Quotation, chain: StacksChain)
 {
 	const nested_quot = open_quotation_cmps (quot, chain) .nested_quot;
 	close_quotation_cmps (nested_quot, chain);
@@ -440,7 +443,7 @@ function list_tts
 	opts: Object,
 )
 {
-	if (fsml_systate .need_full_substitution)
+	if (opts .requested === 'cipher')
 		return parent .str_uid;
 
 	if (opts .requested === 'target uid')
@@ -460,7 +463,7 @@ function list_tts
 
 
 /** Limited convertion quotation to JS list */
-function to_list_cmps (quot: Abstract_stack, chain: StacksChain)
+function to_list_cmps (quot: Quotation, chain: StacksChain)
 {
 	const as0       = quot .get (0);
 	const quotation = as0 .compex .dc ();
@@ -490,10 +493,10 @@ function one_range_tts
 	operand: Array<any>,
 	compex: Compex,
 	opts: Object,
-	quot: Abstract_stack
+	quot: Quotation
 )
 {
-	if (fsml_systate .need_full_substitution)
+	if (opts .requested === 'cipher')
 		return compex .str_uid;
 
 	if (opts .requested === 'target uid')
@@ -511,10 +514,10 @@ function _one_fold_tts
 	operand: Array<any>,
 	compex: Compex,
 	opts: Object,
-	quot: Abstract_stack
+	quot: Quotation
 )
 {
-	if (fsml_systate .need_full_substitution)
+	if (opts .requested === 'cipher')
 		return compex .str_uid;
 
 	if (opts .requested === 'target uid')
@@ -536,7 +539,7 @@ function _one_fold_tts
 }
 
 
-function one_fold_cmps (quot: Abstract_stack, chain: StacksChain)
+function one_fold_cmps (quot: Quotation, chain: StacksChain)
 {
 	var as0 = quot .pop (),
 	as1 = quot .get (0);
@@ -569,10 +572,10 @@ function one_fold_tts
 	operand: Array<any>,
 	compex: Compex,
 	opts: Object,
-	quot: Abstract_stack
+	quot: Quotation
 )
 {
-	if (fsml_systate .need_full_substitution)
+	if (opts .requested === 'cipher')
 		return compex .str_uid;
 
 	if (opts .requested === 'target uid')
@@ -589,9 +592,9 @@ function one_fold_tts
 // not referd by nothing beside deliverer. 'dc' on deliverer produce copy
 // of deliverer (?), not if_object
 
-function if_cmps (quot: Abstract_stack, chain: StacksChain)
+function if_cmps (quot: Quotation, chain: StacksChain)
 {
-	var if_compex = new If_compex ([], base_voc ["if"]);
+	var if_compex = new IFCompex ([], base_voc ["if"]);
 
 	var quotation_true  = quot .get (1) .compex .operand [0];
 	var quotation_false = quot .get (0) .compex .operand [0];
@@ -678,7 +681,7 @@ function if_cmps (quot: Abstract_stack, chain: StacksChain)
 
 		/* temp */
 		item .compex .dc =
-			function (this: If_compex) { return this };
+			function (this: IFCompex) { return this };
 		/* temp */
 
 		item .compex .operands_offset = 1;
@@ -699,7 +702,7 @@ function if_cmps (quot: Abstract_stack, chain: StacksChain)
 function quot_to_js
 (
 	obj: Object,
-	quot: Abstract_stack,
+	quot: Quotation,
 	arg_names_for_quotation: Array<string>,
 	new_indent: number
 )
@@ -733,7 +736,7 @@ function quot_to_js
 }
 
 
-function if_tts (operand: Array<any>, if_object: If_compex, o, outerQuot)
+function if_tts (operand: Array<any>, if_object: IFCompex, o, outerQuot)
 {
 	const condition_str_uid = operand [2] .get_target_str_uid ();
 
@@ -770,16 +773,16 @@ function if_tts (operand: Array<any>, if_object: If_compex, o, outerQuot)
 }
 
 
-function if_supplier_tts (operand: Array<any>)
+function if_supplier_tts (operand: Array<any>, c, opts)
 {
-	if (fsml_systate .need_full_substitution)
+	if (opts .requested === 'cipher')
 		return "if_" +operand [0];
 
 	return operand [1] .item_names [operand [0]];
 }
 
 
-function while_cmps (quot: Abstract_stack, chain: StacksChain)
+function while_cmps (quot: Quotation, chain: StacksChain)
 {
 	const while_object = new Compex
 	(
@@ -915,20 +918,20 @@ function while_tts (operand: Array<any>, while_object: Compex, o, outerQuot)
 }
 
 
-function while_supplier_tts (operand: Array<any>)
+function while_supplier_tts (operand: Array<any>, c, opts)
 {
-	if (fsml_systate .need_full_substitution)
+	if (opts .requested === 'cipher')
 		return "while_" +operand [0];
 
 	return operand [1] .item_names [operand [0]];
 }
 
 
-function true_cmps (quot: Abstract_stack)
+function true_cmps (quot: Quotation)
 	{ compilit ("Boolean", "Bool", true, quot) }
 
 
-function false_cmps (quot: Abstract_stack)
+function false_cmps (quot: Quotation)
 	{ compilit ("Boolean", "Bool", false, quot) }
 
 
@@ -1010,7 +1013,7 @@ function great_tts (operand: Array<any>, c, o, quot)
 }
 
 
-function orderd_cmps (quot: Abstract_stack) // <-- temporarily solution
+function orderd_cmps (quot: Quotation) // <-- temporarily solution
 {
 	const as0 = quot .get (0);
 	as0 .compex .comparative_computing_order = quot .get_next_computing_order ();
@@ -1021,7 +1024,7 @@ const idx_var_name = 1;
 const idx_assigned_expression = 0;
 
 
-function exclamark_cmps (quot: Abstract_stack)
+function exclamark_cmps (quot: Quotation)
 {
 	const as0 = quot .get (0);
 	const as1 = quot .get (1);
@@ -1062,7 +1065,7 @@ function exclamark_tts (operand: Array<any>, c, o, quot)
 
 // Currently is just a move quoted string from leaf on tos
 // as unquoted string in new leaf i.e. refuse quotes
-function fetch_cmps (quot: Abstract_stack)
+function fetch_cmps (quot: Quotation)
 {
 	var as0 = quot .get (0);
 	var name = as0 .compex .operand [0];
@@ -1080,7 +1083,7 @@ function fetch_cmps (quot: Abstract_stack)
 }
 
 
-function id_cmps (quot: Abstract_stack, chain: StacksChain)
+function id_cmps (quot: Quotation, chain: StacksChain)
 {
 	var as0 = quot .get (0),
 		old_compex = as0 .compex,
@@ -1111,10 +1114,10 @@ function ol_tts (operand: Array<any>, c, o, quot)
 }
 
 
-function independent_cmps (quot: Abstract_stack, chain: StacksChain)
+function independent_cmps (quot: Quotation, chain: StacksChain)
 {
 	var as0 = quot .get (0);
-	var new_item = new Abstract_stack_item;
+	var new_item = new StackItem;
 	new_item .compex = as0 .compex;
 	new_item .compex .reference (chain);
 	as0 .dereference ();
@@ -1122,7 +1125,7 @@ function independent_cmps (quot: Abstract_stack, chain: StacksChain)
 }
 
 
-function deep_copy_cmps (quot: Abstract_stack)
+function deep_copy_cmps (quot: Quotation)
 {
 	independent_cmps (quot);
 	var as0 = quot .get (0),
@@ -1133,11 +1136,11 @@ function deep_copy_cmps (quot: Abstract_stack)
 }
 
 
-function depth_cmps (quot: Abstract_stack)
+function depth_cmps (quot: Quotation)
 	{ compilit ("Number", "Num", quot .depth (), quot) }
 
 
-function drop_cmps (quot: Abstract_stack)
+function drop_cmps (quot: Quotation)
 {
 	var as0 = quot .get (0);
 	as0 .dereference ();
@@ -1145,7 +1148,7 @@ function drop_cmps (quot: Abstract_stack)
 }
 
 
-function dup_cmps (quot: Abstract_stack, chain: StacksChain)
+function dup_cmps (quot: Quotation, chain: StacksChain)
 {
 	var as0 = quot .get (0);
 	as0 .reference (chain);
@@ -1153,7 +1156,7 @@ function dup_cmps (quot: Abstract_stack, chain: StacksChain)
 }
 
 
-function swap_cmps (quot: Abstract_stack)
+function swap_cmps (quot: Quotation)
 {
 	var as0 = quot .get (0);
 	quot .set (0, quot .get (1));
@@ -1161,7 +1164,7 @@ function swap_cmps (quot: Abstract_stack)
 }
 
 
-function over_cmps (quot: Abstract_stack, chain: StacksChain)
+function over_cmps (quot: Quotation, chain: StacksChain)
 {
 	var as1 = quot .get (1);
 	as1 .reference (chain);
@@ -1169,16 +1172,11 @@ function over_cmps (quot: Abstract_stack, chain: StacksChain)
 }
 
 
-function bb_cmps (quot: Abstract_stack)
-{
-	fsml_systate .done = true;
-
-	!fsml_systate .no_type_farewell &&
-		fsmlog_type ('Bye-bye. See you later');
-}
+function bb_cmps (quot: Quotation)
+	{ return { done: true } }
 
 
-function help_cmps (quot: Abstract_stack)
+function help_cmps (quot: Quotation)
 {
 	fsmlog_type
 	(`Terminology:\
@@ -1217,7 +1215,7 @@ function help_cmps (quot: Abstract_stack)
 }
 
 
-function license_cmps (quot: Abstract_stack)
+function license_cmps (quot: Quotation)
 	{ fsmlog_type (BSD_2_Clause_license) }
 
 
@@ -1228,7 +1226,7 @@ function time_tts ()
 	{ return "(+new Date ())" }
 
 
-function time_cmps (quot: Abstract_stack)
+function time_cmps (quot: Quotation)
 {
 	var another_newdate_operation =
 		new_stack_item ("Native", "Nat", u, "time");
@@ -1241,7 +1239,7 @@ function time_cmps (quot: Abstract_stack)
 }
 
 
-function push_cmps (quot: Abstract_stack)
+function push_cmps (quot: Quotation)
 {
 	// At time need check and force declare of identifier if not
 	// Or find and substitute
@@ -1268,7 +1266,7 @@ function push_tts
 	operand: Array<any>,
 	cpx: Compex,
 	opts: Object = {},
-	quot: Abstract_stack
+	quot: Quotation
 ): string
 {
 	const list_name	=
@@ -1276,7 +1274,7 @@ function push_tts
 
 	const pushee = compex_to_infix_str (operand [1], u, u, quot);
 
-	if (fsml_systate .need_full_substitution)
+	if (opts .requested === 'cipher')
 		return list_name;
 
 	if (opts .requested === 'target uid')
@@ -1294,7 +1292,7 @@ export function new_stack_item
 	operation: string
 )
 {
-	const asi = new Abstract_stack_item ();
+	const asi = new StackItem ();
 
 	asi .compex .type = type;
 	asi .compex .shortype = shortype;
@@ -1310,7 +1308,7 @@ export function compilit
 	type: string,
 	shortype: string,
 	value: any,
-	quot: Abstract_stack,
+	quot: Quotation,
 	chain: StacksChain
 )
 	{ quot .push (new_stack_item (type, shortype, value, "leaf")) }
@@ -1322,7 +1320,7 @@ export function new_var_item (var_index: number)
 
 /** Perform deep copy of one top stack item. Quite obsoleted */
 
-export function deep_copy (this: any, quot: Abstract_stack): any
+export function deep_copy (this: any, quot: Quotation): any
 {
 	const new_object = new this .constructor ();
 
@@ -1369,10 +1367,9 @@ export const new_str_uid =
 )();
 
 
-const translate_to_js = (quot: Abstract_stack): void =>
+const translate_to_js = (quot: Quotation): void =>
 {
 	const indent_string =  indent_str .repeat (quot .indent_size);
-	fsml_systate .need_full_substitution = false; // ! Bad place
 	let uids_already_in_equation_left = [];
 	quot .str_uids_to_rename = [];
 
@@ -1419,9 +1416,6 @@ const translate_to_js = (quot: Abstract_stack): void =>
 			{
 				if (!item) // ! Can be undefined, is issue and call for fix
 				{
-					cl ("item undefined or \"\"");
-					cl (item);
-
 					fsmlog_type ('item undefined or ""');
 
 					return;
@@ -1514,25 +1508,25 @@ export function compex_to_infix_str
 	compex: Compex,
 	opts: Object = {},
 	uids_already_in_equation_left = [],
-	q: Abstract_stack
+	quot: Quotation
 ): string
 {
 	const operator = compex .operator;
 
 	if (operator === base_voc ["var"])
 	{
-		if (q .predefined_argument_names .length)
+		if (quot .predefined_argument_names .length)
 		{
 			const name_index = compex .operand [0];
-			const name = q .predefined_argument_names [name_index];
+			const name = quot .predefined_argument_names [name_index];
 
 			if
 			(
-				q .isloop &&
+				quot .isloop &&
 				uids_already_in_equation_left .includes (name)
 			)
 			{
-				q .str_uids_to_rename .push (name);
+				quot .str_uids_to_rename .push (name);
 				return name +"_copy";
 			}
 
@@ -1545,19 +1539,19 @@ export function compex_to_infix_str
 	if
 	(
 		(compex .reference_count > 1 || operator .check_flag ("nopure")) &&
-		!(q .need_id_substitution () === compex) &&
-		!fsml_systate .need_full_substitution
+		!(quot .need_id_substitution () === compex) &&
+		opts .requested !== 'cipher'
 	)
 	{
 		var name = compex .get_target_str_uid ();
 
 		if
 		(
-			q .isloop &&
+			quot .isloop &&
 			uids_already_in_equation_left .includes (name)
 		)
 		{
-			q .str_uids_to_rename .push (name);
+			quot .str_uids_to_rename .push (name);
 			return name +"_copy";
 		}
 
@@ -1575,7 +1569,7 @@ export function compex_to_infix_str
 		return leaf;
 	}
 
-	return operator .translate_to_target (compex .operand, compex, opts, q);
+	return operator .translate_to_target (compex .operand, compex, opts, quot);
 }
 
 
@@ -1659,41 +1653,9 @@ function translate_empty_quotation (
 }
 
 
-/* if default 'fsmlog_type' is not overriden, accumulate fsml output for return
-   to environmen at end of compilation. Otherwise use external 'fsmlog_type'
-   for type immediately */
-
-export let output_buffer = '';
-
-
-export const clear_output_buffer = () => output_buffer = '';
-
-
-/** Default way to output is just accumulate output in buffer and then return
-* it to caller
-* @arg		{string} text	Append id to output
-* @return	{string}		Output buffer
-*/
-const default_fsmlog_type = (text)  =>
-	output_buffer += text;
-
-
-/* And set it as default until overriden */
-export let fsmlog_type = default_fsmlog_type;
-
-
-/**
- * Set external callback as typer instead of accumulate in output buffer
- * @arg		{Function} external_fsmlog_type	External callback provide typing
- * @returns {Function}						Same as arg
- */
-export const set_fsmlog_type = (external_fsmlog_type /*: Function */) /*: Function */ =>
-	fsmlog_type = external_fsmlog_type;
-
-
 export const BSD_2_Clause_license =
 	` \
-	Copyright (c) 2021, 2023 Alexander (Shúrko) Stadnichénko${cr}\
+	Copyright (c) 2021, 2024 Alexander (Shúrko) Stadnichénko${cr}\
 	${cr}\
 	All rights reserved. Redistribution and use in  source and binary forms, with or${cr}\
 	without modification, are  permitted provided that the  following conditions are${cr}\
