@@ -1204,7 +1204,7 @@ function help_cmps (quot: Quotation)
 		${cr}1fold - <iterable> <function name> 1fold - functional reduce with start value = 1\
 		${cr}if (quotation quotation condition -- supplier-object) - if statement\
 		${cr}exactly as in the Factor: https://docs.factorcode.org/content/word-if,kernel.html\
-		${cr}for example text: true [ 'will true' ] [ 'will false' ] if .eval dp\
+		${cr}for example text: true [ 'will true' ] [ 'will false' ] if .eval\
 		${cr}leave text: 'will true' on tos\
 		${cr}while - less or more like Factor's 'loop' word:\
 		${cr}https://docs.factorcode.org/content/word-loop,kernel.html\
