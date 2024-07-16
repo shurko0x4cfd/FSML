@@ -1,5 +1,5 @@
 
-/* FSML  */
+/* FSML 0.7.3 */
 
 /* FSML programming language compiler */
 /* Copyright (c) 2021, 2024 Alexander (Shúrko) Stadnichénko */
