@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 
-import { get_fsml_instance } from './fsmlib.js';
+import { get_fsml_instance } from '../dist/fsmlib.js';
 import * as readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 
@@ -20,7 +20,7 @@ cl(`
                                         FSML
             ===========================================================
 
-            FSML  (c) 2021, 2024 Alexander (Shúrko) Stadnichénko
+            FSML 0.7.3 (c) 2021, 2024 Alexander (Shúrko) Stadnichénko
                         Type 'help' to FSML help you,
                  'license' to view BSD license, 'bb' to farewell
 `);
