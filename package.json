@@ -4,12 +4,14 @@
 	"author": "Alexander (Shúrko) Stadnichénko",
 	"license": "BSD-2-Clause",
 	"description": "FSML - homoiconic postfix concatenative programming language. JS implementation",
+	"install": "npm i -g fsmlang",
 	"type": "module",
 	"main": "dist/fsmlib.js",
 	"bin": {
 		"fsml": "bin/fsml.js"
 	},
 	"scripts": {
+		"fsml": "node dist/fsml.js",
 		"type-check": "all/scripts/flow-type-check.sh",
 		"remove-types": "flow-remove-types --pretty all/src/ -d dist/",
 		"test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config=all/config/jest.config.js",

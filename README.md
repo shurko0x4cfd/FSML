@@ -23,6 +23,8 @@ Features:
 
 2. Run in browser from under the local server with the root in "./simple sample browser console".
 
+3. Or run [FSML playground](https://fsml.pages.dev). If unreachable try vpn.
+
 Command line starts with '> ' or 'fsml > ' or 'fsml> '. Almost no error handling yet. On error system often crush and require reload of page. Open browsers console to track it.
 
 
